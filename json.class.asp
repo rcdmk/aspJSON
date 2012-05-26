@@ -30,6 +30,7 @@ class JSON
 		dim regex, i, size, char, prevchar, quoted
 		dim mode, item, key, value, openArray
 		dim actualLCID, curentArray, currentObject
+		dim tmpArray, tmpObj
 		
 		log("Load string: """ & strJson & """")
 		
@@ -57,8 +58,8 @@ class JSON
 		mode = "init"
 		quoted = false
 		openArray = false
-		currentArray = null
-		set currentObject = i_dicionario
+		set currentObject = new JSONItem
+		set currentObject.value = i_dicionario
 		
 		do while i < size
 			i = i + 1
@@ -71,7 +72,7 @@ class JSON
 				' Se for o a raiz
 				if key = "[[root]]" then
 					' então esvazia o objeto
-					i_dicionario.removeAll
+					currentObject.value.removeAll
 				end if
 				
 				
@@ -81,24 +82,37 @@ class JSON
 					
 					if key <> "[[root]]" then
 						' se não, cria um novo objeto
-						set item = createObject("scripting.fileSystemObject")
-						currentObject.add key, item
+						set item = new JSONitem
+						set item.parent = currentObject
+						set item.value = createObject("scripting.fileSystemObject")
 						
-						item.add "__parent", currentObject
+						currentObject.add key, item
 						set currentObject = item
 					end if
 					mode = "openKey"
 					
 				' Init Array
 				elseif char = "[" then
-					openArray = true
 					log("Create array")
 					
-					redim item(-1)
-					currentObject.add key, item
+					redim item1(-1)
 					
-					currentArray = item
+					set item = new JSONitem
+					item.value = item1
 					
+					if isobject(currentArray) and openArray then
+						set item.parent = currentArray
+						tmpArray = currentArray.value
+						ArrayPush tmpArray, item
+						
+						currentArray.value = tmpArray
+					else
+						currentObject.value.add key, item
+					end if
+					
+					set currentArray = item
+					
+					openArray = true
 					mode = "openValue"
 				end if
 			
@@ -162,7 +176,7 @@ class JSON
 				if quoted then
 					
 					if char = """" and prevchar <> "\" then
-						log("Close string value: " & value)
+						log("Close string value: """ & value & """")
 						mode = "addValue"
 					else
 						value = value & char
@@ -200,13 +214,14 @@ class JSON
 					quoted = false
 					
 					if openArray then
-						redim preserve currentArray(ubound(currentArray) + 1)
-						currentArray(ubound(currentArray)) = value
-						currentObject(key) = currentArray
+						tmpArray = currentArray.value
+						ArrayPush tmpArray, value
+						
+						currentArray.value = tmpArray
 						
 						log("Value added to array: """ & key & """: " & value)
 					else
-						currentObject.add key, value
+						currentObject.value.add key, value
 						log("Value added: """ & key & """")
 					end if
 				end if
@@ -225,9 +240,21 @@ class JSON
 						mode = "openKey"
 					end if
 					
-				elseif char = "]" and prevchar <> "\" then
+				elseif char = "]" then
 					log("Close array")
-					openArray = false
+					
+					if isobject(currentArray.parent) then
+						set currentArray = currentArray.parent
+					else
+						openArray = false
+					end if
+
+				elseif char = "}" then
+					log("Close object")
+					
+					if isobject(currentObject.parent) then
+						set currentObject = currentObject.parent
+					end if
 				end if
 			end if
 			
@@ -255,7 +282,12 @@ class JSON
 		
 		for each prop in i_dicionario.keys
 			if out <> "{" then out = out & ","
-			value = i_dicionario(prop)
+			
+			if isobject(i_dicionario(prop)) then
+				value = i_dicionario(prop).value
+			else
+				value = i_dicionario(prop)
+			end if
 			
 			out = out & """" & prop & """:"
 			
@@ -303,30 +335,50 @@ class JSON
 	
 	
 	private function parseArray(byref arr)
-		dim i, j, dimensions, out, elm
+		dim i, j, dimensions, out, arr2, elm, val
 		
 		out = "["
 		
-		dimensions = NumDimensions(arr)
+		if isobject(arr) then
+			arr2 = arr.value
+		else
+			arr2 = arr
+		end if
+		
+		dimensions = NumDimensions(arr2)
 		
 		for i = 1 to dimensions
 			if i > 1 then out = out & ","
 			
 			if dimensions > 1 then out = out & "["
 			
-			for j = 0 to ubound(arr, i)
+			for j = 0 to ubound(arr2, i)
 				if dimensions > 1 then
-					elm = arr(i - 1, j)
+					if isobject(arr2(i - 1, j)) then
+						set elm = arr2(i - 1, j)
+					else
+						elm = arr2(i - 1, j)
+					end if
 				else
-					elm = arr(j)
+					if isobject(arr2(j)) then
+						set elm = arr2(j)
+					else
+						elm = arr2(j)
+					end if
 				end if
 				
 				if j > 0 then out = out & ","
 				
-				if isArray(elm) then
-					out = out & parseArray(elm)
+				if isobject(elm) then
+					val = elm.value
 				else
-					out = out & prepareValue(elm)
+					val = elm
+				end if
+				
+				if isArray(val) then
+					out = out & parseArray(val)
+				else
+					out = out & prepareValue(val)
 				end if
 				
 			next
@@ -349,9 +401,45 @@ class JSON
 		NumDimensions = dimensions - 1 
 	End Function 
 	
+	private function ArrayPush(byref arr, byref value)
+		redim preserve arr(ubound(arr) + 1)
+		if isobject(value) then
+			set arr(ubound(arr)) = value
+		else
+			arr(ubound(arr)) = value
+		end if
+		ArrayPush = arr
+	end function
 	
 	private sub log(byval msg)
 		if i_debug then response.write "<li>" & msg & "</li>" & vbcrlf
+	end sub
+end class
+
+
+class JSONitem
+	dim i_value
+	
+	public parent
+	
+	public property get value
+		if isObject(i_value) then
+			set value = i_value
+		else
+			value = i_value
+		end if
+	end property
+	
+	public property set value(vl)
+		set i_value = vl
+	end property
+	
+	public property let value(vl)
+		i_value = vl
+	end property
+	
+	private sub class_terminate
+		set i_value = nothing
 	end sub
 end class
 %>

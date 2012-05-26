@@ -5,7 +5,7 @@ dim jsonObj, jsonString
 testeLoad = true
 teteAdd = false
 
-jsonString = "{ ""chave"" : ""valorTexto"", ""chave2"": 123.456, ""chave3"": [1, ""2"", 3.4] }"
+jsonString = "{ ""chave"" : ""valorTexto"", ""chave2"": 123.456, ""chave3"": [1, ""2"", 3.4, [5, 6, [7, 8]]] }"
 
 set jsonObj = new json
 
@@ -31,8 +31,6 @@ if teteAdd then
 	jsonObj.add "lista", arr
 	jsonObj.add "lista2", multArr
 end if
-
-
 %>
 <pre>
 	<%= jsonObj.write %>
