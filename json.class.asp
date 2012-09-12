@@ -86,11 +86,17 @@ class JSON
 					if key <> "[[root]]" then
 						' cria um novo objeto
 						set item = new JSONitem
-						set item.parent = currentObject
 						set item.value = createObject("scripting.dictionary")
 						
-						set tmpObj = currentObject.value
-						tmpObj.add key, item
+						if openArray > 0 and isObject(currentArray) then
+							set item.parent = currentArray
+							tmpArray = currentArray.value
+							ArrayPush tmpArray, item
+						else
+							set item.parent = currentObject
+							set tmpObj = currentObject.value
+							tmpObj.add key, item
+						end if
 						
 						set currentObject = item
 					end if
@@ -285,9 +291,9 @@ class JSON
 	' Aciciona uma propriedade ao objeto
 	public sub add(byval prop, byval obj)
 		if isArray(obj) then
-			i_dicionario.add prop, prepareArray(obj)
+			i_dicionario.add prop, obj
 		else
-			i_dicionario.add prop, prepareValue(obj)
+			i_dicionario.add prop, obj
 		end if
 	end sub
 	
