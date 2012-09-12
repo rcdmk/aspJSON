@@ -5,7 +5,7 @@ dim jsonObj, jsonString
 testeLoad = true
 teteAdd = false
 
-jsonString = "{ ""chave"" : ""valorTexto"", ""chave2"": 123.456, ""chave3"": [1, ""2"", 3.4, [5, 6, [7, 8]]] }"
+jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"" } ] } }"
 
 set jsonObj = new json
 
