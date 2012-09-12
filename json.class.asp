@@ -297,6 +297,24 @@ class JSON
 		end if
 	end sub
 	
+	' Retorna o valor da propriedade
+	public function value(byval prop)
+		if isObject(i_dicionario(prop)) then
+			set value = i_dicionario(prop)
+		else
+			value = i_dicionario(prop)
+		end if
+	end function
+	
+	' Altera uma propriedade do objeto
+	public sub change(byval prop, byval obj)
+		if isArray(obj) then
+			i_dicionario(prop) = obj
+		else
+			i_dicionario.add prop, obj
+		end if
+	end sub
+	
 	' Devolve a representacao do objeto como string
 	public function ToString()
 		dim actualLCID, out, value
