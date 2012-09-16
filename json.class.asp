@@ -309,9 +309,12 @@ class JSON
 	' Altera uma propriedade do objeto
 	public sub change(byval prop, byval obj)
 		if isArray(obj) then
-			i_dicionario(prop) = obj
+			set item = new JSONitem
+			item.value = obj
+			
+			set i_dicionario(prop) = item
 		else
-			i_dicionario.add prop, obj
+			i_dicionario(prop) = obj
 		end if
 	end sub
 	
