@@ -81,7 +81,7 @@ class JSON
 				
 				' Init object
 				if char = "{" then
-					log("Create object")
+					log("Create object<ul>")
 					
 					if key <> "[[root]]" then
 						' cria um novo objeto
@@ -92,11 +92,15 @@ class JSON
 							set item.parent = currentArray
 							tmpArray = currentArray.value
 							ArrayPush tmpArray, item
+							
+							currentArray.value = tmpArray
 						else
 							set item.parent = currentObject
 							set tmpObj = currentObject.value
 							tmpObj.add key, item
 						end if
+						
+						item.depth = item.parent.depth + 1
 						
 						set currentObject = item
 					end if
@@ -106,22 +110,34 @@ class JSON
 					
 				' Init Array
 				elseif char = "[" then
-					log("Create array")
+					log("Create array<ul>")
 					
+					dim addedToArray
 					redim item1(-1)
+					
+					addedToArray = false
 					
 					set item = new JSONitem
 					item.value = item1
 					
-					if isobject(currentArray) and openArray then
-						set item.parent = currentArray
-						tmpArray = currentArray.value
-						ArrayPush tmpArray, item
-						
-						currentArray.value = tmpArray
-					else
-						currentObject.value.add key, item
+					if isobject(currentArray) and openArray > 0 then
+						if currentArray.depth >= currentObject.depth then
+							set item.parent = currentArray
+							tmpArray = currentArray.value
+							ArrayPush tmpArray, item
+							
+							currentArray.value = tmpArray
+							addedToArray = true
+						end if
 					end if
+					
+					if not addedToArray then
+						set item.parent = currentObject
+						currentObject.value.add key, item
+						item.depth = currentObject.depth + 1
+					end if
+					
+					item.depth = item.parent.depth + 1
 					
 					set currentArray = item
 					
@@ -225,6 +241,9 @@ class JSON
 			' Adiciona o valor ao dicionario
 			elseif mode = "addValue" then
 				if key <> "" then
+					dim useArray
+					useArray = false
+					
 					if not quoted then
 						log("Value converted to number")
 						value = cdbl(value)
@@ -232,14 +251,26 @@ class JSON
 					
 					quoted = false
 					
-					if openArray then
-						tmpArray = currentArray.value
-						ArrayPush tmpArray, value
+					if openArray > 0 and isObject(currentArray) then
+						useArray = true
 						
-						currentArray.value = tmpArray
+						if isObject(currentObject) then
+							if isObject(currentObject.parent) then
+								if isArray(currentObject.parent.value) then useArray = false
+							end if
+						end if
 						
-						log("Value added to array: """ & key & """: " & value)
-					else
+						if useArray then
+							tmpArray = currentArray.value
+							ArrayPush tmpArray, value
+							
+							currentArray.value = tmpArray
+							
+							log("Value added to array: """ & key & """: " & value)
+						end if
+					end if
+					
+					if not useArray then
 						currentObject.value.add key, value
 						log("Value added: """ & key & """")
 					end if
@@ -251,32 +282,44 @@ class JSON
 			' Muda o modo de acordo com o estado atual
 			elseif mode = "next" then
 				if char = "," then
-					if openArray then
-						log("New value")
-						mode = "openValue"
+					if openArray > 0 and isObject(currentArray) then
+						if currentArray.depth >= currentObject.depth then
+							log("New value")
+							mode = "openValue"
+						else
+							log("New key")
+							mode = "openKey"
+						end if
 					else
 						log("New key")
 						mode = "openKey"
 					end if
 					
 				elseif char = "]" then
-					log("Close array")
+					log("Close array</ul>")
 					
 					if isobject(currentArray.parent) then
 						set currentArray = currentArray.parent
+					else
+						currentArray = currentArray.parent
 					end if
 					
 					openArray = openArray - 1
+					
+					mode = "next"
 
 				elseif char = "}" then
-					log("Close object")
+					log("Close object</ul>")
 					
 					if isobject(currentObject.parent) then
 						set currentObject = currentObject.parent
+					else
+						currentObject = currentObject.parent
 					end if
 					
 					openObject = openObject - 1
 					
+					mode = "next"					
 				end if
 			end if
 			
@@ -492,6 +535,7 @@ class JSONitem
 	dim i_value
 	
 	public parent
+	public depth
 	
 	public property get value
 		if isObject(i_value) then
@@ -508,6 +552,11 @@ class JSONitem
 	public property let value(vl)
 		i_value = vl
 	end property
+	
+	private sub class_initialize
+		depth = 0
+		parent = null
+	end sub
 	
 	private sub class_terminate
 		set i_value = nothing

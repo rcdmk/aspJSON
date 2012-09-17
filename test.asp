@@ -25,15 +25,15 @@
 	dim jsonObj, jsonString
 	
 	testLoad = true
-	testAdd = true
-	testValue = true
-	testChange = true
+	testAdd = false
+	testValue = false
+	testChange = false
 	
 	
 	
 	set jsonObj = new json
 	
-	'jsonObj.debug = true
+	jsonObj.debug = true
 	
 	if testLoad then
 		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"" } ] } }"
