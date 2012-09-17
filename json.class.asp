@@ -1,9 +1,9 @@
 <%
-' Classe utilizada para interpretacao e construcao de objetos JSON
+' Base JSON object class
 
 class JSON
-	dim i_debug, depth
-	redim i_properties(-1)
+	dim i_debug, i_depth, i_parent
+	dim i_properties
 
 	' Properties
 	public property get debug
@@ -19,7 +19,7 @@ class JSON
 		depth = i_depth
 	end property
 	
-	public property let depth(value)
+	private property let depth(value)
 		i_depth = value
 	end property
 	
@@ -29,13 +29,26 @@ class JSON
 	end property
 	
 	
+	public property get parent
+		set parent = i_parent
+	end property	
+	
+	public property set parent(value)
+		set i_parent = value
+		me.depth = i_parent.depth + 1
+	end property
+	
+	
 
 	' Constructor and destructor
 	private sub class_initialize()
+		i_depth = 0
 		i_debug = false
+		redim i_properties(-1)
 	end sub
 	
 	private sub class_terminate()
+		dim i
 		for i = 0 to ubound(i_properties)
 			set i_properties(i) = nothing
 		next
@@ -48,7 +61,7 @@ class JSON
 	public sub load(byval strJson)
 		dim regex, i, size, char, prevchar, quoted
 		dim mode, item, key, value, openArray, openObject
-		dim actualLCID, tmpArray, tmpObj
+		dim actualLCID, tmpArray, addedToArray
 		dim currentObject, currentArray
 		
 		log("Load string: """ & strJson & """")
@@ -61,10 +74,10 @@ class JSON
 		i = 0
 		size = len(strJson)
 		
-		' Se não tiver o mínimo de 2 caracteres, sai
+		' At least 2 chars to continue
 		if size < 2 then  exit sub
 		
-		' Inicializa o objeto regex para usar durante o loop
+		' Init the regex to be used in the loop
 		set regex = new regexp
 		regex.global = true
 		regex.ignoreCase = true
@@ -79,13 +92,13 @@ class JSON
 			i = i + 1
 			char = mid(strJson, i, 1)
 			
-			' Raiz ou início do objeto
+			' root or object begining
 			if mode = "init" then
 				log("Enter init")
 				
-				' Se for o a raiz
+				' if we are in root
 				if key = "[[root]]" then
-					' então esvazia o objeto
+					' empty the object
 					redim i_properties(-1)
 				end if
 				
@@ -94,17 +107,28 @@ class JSON
 					log("Create object<ul>")
 					
 					if key <> "[[root]]" then
-						' cria um novo objeto
+						' creates a new object
 						set item = new JSON
+						set item.parent = currentObject
+						
+						addedToArray = false
 						
 						if isArray(currentArray) then
 							if currentArray.depth >= currentObject.depth then
-								ArrayPush currentArray, item
-								item.depth = currentObject.depth + 1
+								set item.parent = currentArray
+								tmpArray = currentArray.items
+								
+								ArrayPush tmpArray, item
+								
+								currentArray.items = tmpArray
+								addedToArray = true
 							end if
 						end if
 						
+						item.depth = item.parent.depth + 1
 						set currentObject = item
+						
+						if not addedToArray then add key, item
 					end if
 					
 					openObject = openObject + 1
@@ -114,24 +138,25 @@ class JSON
 				elseif char = "[" then
 					log("Create array<ul>")
 					
-					dim addedToArray
-					redim item(-1)
+					set item = new JSONarray
 					
 					addedToArray = false					
 					
 					if isobject(currentArray) and openArray > 0 then
 						if currentArray.depth >= currentObject.depth then
 							set item.parent = currentArray
-							tmpArray = currentArray.value
+							tmpArray = currentArray.items
 							ArrayPush tmpArray, item
 							
-							currentArray.value = tmpArray
+							currentArray.items = tmpArray
 							addedToArray = true
 						end if
 					end if
 					
 					if not addedToArray then
 						set item.parent = currentObject
+						
+						tmpArray = currentObject.properties
 						currentObject.value.add key, item
 						item.depth = currentObject.depth + 1
 					end if
@@ -332,33 +357,86 @@ class JSON
 	
 	' Aciciona uma propriedade ao objeto
 	public sub add(byval prop, byval obj)
-		if isArray(obj) then
-			i_dicionario.add prop, obj
+		dim p
+		p = getProperty(prop)
+		
+		if isObject(p) then
+			err.raise 1, "A property already exists with the name: " & prop & "."
 		else
-			i_dicionario.add prop, obj
+			dim item, item2
+			set item = new JSONproperty
+			item.name = prop
+			set item.parent = me
+			
+			if isArray(obj) then
+				set item2 = new JSONarray
+				set item.value = item2
+				
+			elseif isObject(obj) then
+				set item.value = obj
+			else
+				item.value = obj
+			end if
+			
+			ArrayPush i_properties, item
 		end if
 	end sub
 	
 	' Retorna o valor da propriedade
 	public function value(byval prop)
-		if isObject(i_dicionario(prop)) then
-			set value = i_dicionario(prop)
+		dim p
+		p = getProperty(prop)
+		
+		if isObject(p) then
+			if isObject(p.value) then
+				set value = p.value
+			else
+				value = p.value
+			end if
 		else
-			value = i_dicionario(prop)
+			err.raise 1, "Property " & prop & " doesn't exists."
 		end if
 	end function
 	
 	' Altera uma propriedade do objeto
+	' Cria a propriedade se ela nao existir
 	public sub change(byval prop, byval obj)
-		if isArray(obj) then
-			set item = new JSONitem
-			item.value = obj
-			
-			set i_dicionario(prop) = item
+		dim p
+		p = getProperty(prop)
+		
+		if isObject(p) then
+			if isArray(obj) then
+				set item = new JSONarray
+				item.items = obj
+				item.parent = me
+				
+				p.value = item
+				
+			elseif isObject(obj) then
+				set p.value = obj
+			else
+				p.value = obj
+			end if
 		else
-			i_dicionario(prop) = obj
+			add prop, obj
 		end if
 	end sub
+	
+	' Retorna a propriedade se existir
+	private function getProperty(byval prop)
+		dim i
+		
+		do while i <= ubound(i_properties)
+			set p = i_properties(i)
+			
+			if p.name = prop then
+				set getProperty = p
+				
+				exit do
+			end if
+		loop
+	end function
+	
 	
 	' Devolve a representacao do objeto como string
 	public function ToString()
@@ -366,7 +444,7 @@ class JSON
 		actualLCID = session.LCID
 		session.LCID = 1033
 		
-		out = prepareObject(i_dicionario)
+		out = prepareObject(me)
 		
 		session.LCID = actualLCID
 		
@@ -410,7 +488,7 @@ class JSON
 		out = "["
 		
 		if isobject(arr) then
-			arr2 = arr.value
+			arr2 = arr.items
 		else
 			arr2 = arr
 		end if
@@ -449,7 +527,7 @@ class JSON
 					val = elm
 				end if
 				
-				if isArray(val) then
+				if isArray(val) or typeName(val) = "JSONarray" then
 					out = out & prepareArray(val)
 				elseif isObject(val) then
 					out = out & prepareObject(val)
@@ -468,25 +546,23 @@ class JSON
 	
 	
 	private function prepareObject(obj)
-		dim out, value
+		dim out, prop, value, i
 		out = "{"
 		
-		for each prop in obj.keys
+		for i = 0 to ubound(obj.properties)
+			set prop = obj.properties(i)
+			
 			if out <> "{" then out = out & ","
 			
-			if isobject(obj(prop)) then
-				if isobject(obj(prop).value) then
-					set value = obj(prop).value
-				else
-					value = obj(prop).value
-				end if
+			if isobject(prop.value) then
+				set value = prop.value
 			else
-				value = obj(prop)
+				value = prop.value
 			end if
 			
-			if prop <> "[[root]]" then out = out & """" & prop & """:"
+			if prop.name <> "[[root]]" then out = out & """" & prop & """:"
 			
-			if isArray(value) then
+			if isArray(value) or typeName(value) = "JSONarray" then
 				out = out & prepareArray(value)
 				
 			elseif isObject(value) then
@@ -502,7 +578,7 @@ class JSON
 		prepareObject = out
 	end function
 	
-	
+	' 
 	private Function NumDimensions(byref arr) 
 		Dim dimensions : dimensions = 0 
 		On Error Resume Next 
@@ -531,20 +607,47 @@ end class
 
 
 class JSONarray
-	redim i_items(-1)
+	dim i_items, i_depth, i_parent
 
 	public property get items
 		items = i_items
+	end property	
+	
+	public property let items(value)
+		if isArray(value) then
+			i_items = value
+		else
+			err.raise 1, "The value assigned is not an array."
+		end if
+	end property	
+	
+	
+	public property get depth
+		depth = i_depth
 	end property
 	
-	public depth
+	private property let depth(value)
+		i_depth = value
+	end property
+	
+	
+	public property get parent
+		set parent = i_parent
+	end property	
+	
+	public property set parent(value)
+		set i_parent = value
+		me.depth = i_parent.depth + 1
+	end property
+	
 	
 	private sub class_initialize
-		redim items(-1)
+		redim i_items(-1)
 		depth = 0
 	end sub
 	
 	private sub class_terminate
+		dim i
 		for i = 0 to ubound(i_items)
 			set i_items(i) = nothing
 		next
@@ -553,12 +656,41 @@ end class
 
 
 class JSONproperty
-	public name
-	public value
+	dim i_name, i_value
+	dim i_parent
+	
+	
+	public property get name
+		name = i_name
+	end property
+	
+	public property let name(val)
+		i_name = val
+	end property
+	
+	
+	public property get value
+		name = i_value
+	end property
+	
+	public property let value(val)
+		i_value = val
+	end property
+	
+	public property set value(val)
+		set i_value = val
+	end property
+	
+	
+	public property get parent
+		set parent = i_parent
+	end property	
+	
+	public property set parent(val)
+		set i_parent = val
+	end property
 	
 	private sub class_initialize
-		name = ""
-		value = ""
 	end sub
 	
 	private sub class_terminate

@@ -22,10 +22,11 @@
 </head>
 <body>
 	<%
+	server.ScriptTimeout = 10
 	dim jsonObj, jsonString
 	
-	testLoad = true
-	testAdd = false
+	testLoad = false
+	testAdd = true
 	testValue = false
 	testChange = false
 	
@@ -58,8 +59,8 @@
 		
 		jsonObj.add "nome", "Jozé"
 		jsonObj.add "idade", 25
-		jsonObj.add "lista", arr
-		jsonObj.add "lista2", multArr
+		'jsonObj.add "lista", arr
+		'jsonObj.add "lista2", multArr
 	end if
 	
 	
@@ -84,6 +85,10 @@
 	
 	%>
 	<h3>Output</h3>
-	<pre><%= jsonObj.write %></pre>
+	<pre><%'= jsonObj.write %></pre>
+	
+	<%
+	set jsonObj = nothing
+	%>
 </body>
 </html>
