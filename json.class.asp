@@ -2,7 +2,8 @@
 ' Classe utilizada para interpretacao e construcao de objetos JSON
 
 class JSON
-	dim i_dicionario, i_debug
+	dim i_debug, depth
+	redim i_properties(-1)
 
 	' Properties
 	public property get debug
@@ -12,16 +13,34 @@ class JSON
 	public property let debug(value)
 		i_debug = value
 	end property
+	
+	
+	public property get depth
+		depth = i_depth
+	end property
+	
+	public property let depth(value)
+		i_depth = value
+	end property
+	
+	
+	public property get properties
+		properties = i_properties
+	end property
+	
+	
 
 	' Constructor and destructor
 	private sub class_initialize()
-		set i_dicionario = Server.CreateObject("Scripting.Dictionary")
 		i_debug = false
 	end sub
 	
 	private sub class_terminate()
-		i_dicionario.removeAll
-		set i_dicionario = nothing
+		for i = 0 to ubound(i_properties)
+			set i_properties(i) = nothing
+		next
+		
+		redim i_properties(-1)
 	end sub
 	
 	
@@ -29,8 +48,8 @@ class JSON
 	public sub load(byval strJson)
 		dim regex, i, size, char, prevchar, quoted
 		dim mode, item, key, value, openArray, openObject
-		dim actualLCID, curentArray, currentObject
-		dim tmpArray, tmpObj
+		dim actualLCID, tmpArray, tmpObj
+		dim currentObject, currentArray
 		
 		log("Load string: """ & strJson & """")
 		
@@ -39,15 +58,11 @@ class JSON
 		
 		strJson = trim(strJson)
 		
-		key = "[[root]]"
 		i = 0
 		size = len(strJson)
 		
 		' Se não tiver o mínimo de 2 caracteres, sai
-		if size < 2 then
-			load = ""
-			exit sub
-		end if
+		if size < 2 then  exit sub
 		
 		' Inicializa o objeto regex para usar durante o loop
 		set regex = new regexp
@@ -55,15 +70,10 @@ class JSON
 		regex.ignoreCase = true
 		regex.pattern = "\w"
 		
+		key = "[[root]]"
 		mode = "init"
 		quoted = false
-		openArray = 0
-		openObject = 0
-		objectInArray = false
-		arrayInObject = false
-		
-		set currentObject = new JSONItem
-		set currentObject.value = i_dicionario
+		set currentObject = me
 		
 		do while i < size
 			i = i + 1
@@ -76,7 +86,7 @@ class JSON
 				' Se for o a raiz
 				if key = "[[root]]" then
 					' então esvazia o objeto
-					currentObject.value.removeAll
+					redim i_properties(-1)
 				end if
 				
 				' Init object
@@ -85,22 +95,14 @@ class JSON
 					
 					if key <> "[[root]]" then
 						' cria um novo objeto
-						set item = new JSONitem
-						set item.value = createObject("scripting.dictionary")
+						set item = new JSON
 						
-						if openArray > 0 and isObject(currentArray) then
-							set item.parent = currentArray
-							tmpArray = currentArray.value
-							ArrayPush tmpArray, item
-							
-							currentArray.value = tmpArray
-						else
-							set item.parent = currentObject
-							set tmpObj = currentObject.value
-							tmpObj.add key, item
+						if isArray(currentArray) then
+							if currentArray.depth >= currentObject.depth then
+								ArrayPush currentArray, item
+								item.depth = currentObject.depth + 1
+							end if
 						end if
-						
-						item.depth = item.parent.depth + 1
 						
 						set currentObject = item
 					end if
@@ -113,12 +115,9 @@ class JSON
 					log("Create array<ul>")
 					
 					dim addedToArray
-					redim item1(-1)
+					redim item(-1)
 					
-					addedToArray = false
-					
-					set item = new JSONitem
-					item.value = item1
+					addedToArray = false					
 					
 					if isobject(currentArray) and openArray > 0 then
 						if currentArray.depth >= currentObject.depth then
@@ -531,35 +530,39 @@ class JSON
 end class
 
 
-class JSONitem
-	dim i_value
+class JSONarray
+	redim i_items(-1)
+
+	public property get items
+		items = i_items
+	end property
 	
-	public parent
 	public depth
 	
-	public property get value
-		if isObject(i_value) then
-			set value = i_value
-		else
-			value = i_value
-		end if
-	end property
-	
-	public property set value(vl)
-		set i_value = vl
-	end property
-	
-	public property let value(vl)
-		i_value = vl
-	end property
-	
 	private sub class_initialize
+		redim items(-1)
 		depth = 0
-		parent = null
 	end sub
 	
 	private sub class_terminate
-		set i_value = nothing
+		for i = 0 to ubound(i_items)
+			set i_items(i) = nothing
+		next
+	end sub
+end class
+
+
+class JSONproperty
+	public name
+	public value
+	
+	private sub class_initialize
+		name = ""
+		value = ""
+	end sub
+	
+	private sub class_terminate
+		if isObject(value) then set value = nothing
 	end sub
 end class
 %>
