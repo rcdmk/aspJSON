@@ -35,7 +35,7 @@ class JSON
 	
 	public property set parent(value)
 		set i_parent = value
-		me.depth = i_parent.depth + 1
+		i_depth = i_parent.depth + 1
 	end property
 	
 	
@@ -59,11 +59,11 @@ class JSON
 	
 	
 	' Methods
-	public sub parse(byval strJson)
+	public function parse(byval strJson)
 		dim regex, i, size, char, prevchar, quoted
 		dim mode, item, key, value, openArray, openObject
 		dim actualLCID, tmpArray, addedToArray
-		dim currentObject, currentArray
+		dim root, currentObject, currentArray
 		
 		log("Load string: """ & strJson & """")
 		
@@ -76,7 +76,7 @@ class JSON
 		size = len(strJson)
 		
 		' At least 2 chars to continue
-		if size < 2 then  exit sub
+		if size < 2 then  exit function
 		
 		' Init the regex to be used in the loop
 		set regex = new regexp
@@ -84,6 +84,7 @@ class JSON
 		regex.ignoreCase = true
 		regex.pattern = "\w"
 		
+		set root = me
 		key = "[[root]]"
 		mode = "init"
 		quoted = false
@@ -119,17 +120,13 @@ class JSON
 								set item.parent = currentArray
 								tmpArray = currentArray.items
 								
-								ArrayPush tmpArray, item
-								
-								currentArray.items = tmpArray
+								ArrayPush currentArray.items, item
 								addedToArray = true
 							end if
 						end if
 						
-						item.depth = item.parent.depth + 1
-						set currentObject = item
-						
-						if not addedToArray then add key, item
+						if not addedToArray then currentObject.add key, item						
+						set currentObject = item						
 					end if
 					
 					openObject = openObject + 1
@@ -140,6 +137,7 @@ class JSON
 					log("Create array<ul>")
 					
 					set item = new JSONarray
+					if key = "[[root]]" then set root = item
 					
 					addedToArray = false					
 					
@@ -158,11 +156,8 @@ class JSON
 						set item.parent = currentObject
 						
 						tmpArray = currentObject.pairs
-						currentObject.value.add key, item
-						item.depth = currentObject.depth + 1
+						currentObject.add key, item
 					end if
-					
-					item.depth = item.parent.depth + 1
 					
 					set currentArray = item
 					
@@ -281,15 +276,15 @@ class JSON
 						
 						if isObject(currentObject) then
 							if isObject(currentObject.parent) then
-								if isArray(currentObject.parent.value) then useArray = false
+								if typeName(currentObject.parent) = "JSONarray" then useArray = false
 							end if
 						end if
 						
 						if useArray then
-							tmpArray = currentArray.value
+							tmpArray = currentArray.items
 							ArrayPush tmpArray, value
 							
-							currentArray.value = tmpArray
+							currentArray.items = tmpArray
 							
 							log("Value added to array: """ & key & """: " & value)
 						end if
@@ -354,7 +349,9 @@ class JSON
 		set regex = nothing
 		
 		session.LCID = actualLCID
-	end sub
+		
+		set parse = root
+	end function
 	
 	' Aciciona uma propriedade ao objeto
 	public sub add(byval prop, byval obj)
@@ -523,8 +520,11 @@ class JSON
 				
 				if j > 0 then out = out & ","
 				
+				
 				if isobject(elm) then
-					if isobject(elm.value) then
+					if typeName(elm) = "JSONarray" then
+						val = elm.items
+					elseif isObject(elm.value) then
 						set val = elm.value
 					else
 						val = elm.value
@@ -645,7 +645,7 @@ class JSONarray
 	
 	public property set parent(value)
 		set i_parent = value
-		me.depth = i_parent.depth + 1
+		i_depth = i_parent.depth + 1
 	end property
 	
 	
