@@ -24,8 +24,8 @@ class JSON
 	end property
 	
 	
-	public property get properties
-		properties = i_properties
+	public property get pairs
+		pairs = i_properties
 	end property
 	
 	
@@ -156,7 +156,7 @@ class JSON
 					if not addedToArray then
 						set item.parent = currentObject
 						
-						tmpArray = currentObject.properties
+						tmpArray = currentObject.pairs
 						currentObject.value.add key, item
 						item.depth = currentObject.depth + 1
 					end if
@@ -358,18 +358,20 @@ class JSON
 	' Aciciona uma propriedade ao objeto
 	public sub add(byval prop, byval obj)
 		dim p
-		p = getProperty(prop)
+		getProperty prop, p
 		
 		if isObject(p) then
 			err.raise 1, "A property already exists with the name: " & prop & "."
 		else
-			dim item, item2
-			set item = new JSONproperty
+			dim item
+			set item = new JSONpair
 			item.name = prop
 			set item.parent = me
 			
 			if isArray(obj) then
+				dim item2
 				set item2 = new JSONarray
+				item2.items = obj
 				set item.value = item2
 				
 			elseif isObject(obj) then
@@ -377,7 +379,7 @@ class JSON
 			else
 				item.value = obj
 			end if
-			
+
 			ArrayPush i_properties, item
 		end if
 	end sub
@@ -385,7 +387,7 @@ class JSON
 	' Retorna o valor da propriedade
 	public function value(byval prop)
 		dim p
-		p = getProperty(prop)
+		getProperty prop, p
 		
 		if isObject(p) then
 			if isObject(p.value) then
@@ -402,7 +404,7 @@ class JSON
 	' Cria a propriedade se ela nao existir
 	public sub change(byval prop, byval obj)
 		dim p
-		p = getProperty(prop)
+		getProperty prop, p
 		
 		if isObject(p) then
 			if isArray(obj) then
@@ -423,42 +425,45 @@ class JSON
 	end sub
 	
 	' Retorna a propriedade se existir
-	private function getProperty(byval prop)
-		dim i
+	private sub getProperty(byval prop, byref outProp)
+		dim i, p
+		outProp = null
 		
 		do while i <= ubound(i_properties)
 			set p = i_properties(i)
 			
 			if p.name = prop then
-				set getProperty = p
+				set outProp = p
 				
 				exit do
 			end if
+			
+			i = i + 1
 		loop
-	end function
+	end sub
 	
 	
 	' Devolve a representacao do objeto como string
-	public function ToString()
-		dim actualLCID, out, value
+	public function Serialize()
+		dim actualLCID, out
 		actualLCID = session.LCID
 		session.LCID = 1033
 		
-		out = prepareObject(me)
+		out = serializeObject(me)
 		
 		session.LCID = actualLCID
 		
-		ToString = out
+		Serialize = out
 	end function
 	
 	' Escreve direto na pagina
 	public sub write()
-		response.write ToString
+		response.write Serialize
 	end sub
 	
 	
 	' Helpers
-	private function prepareValue(byval value)
+	private function serializeValue(byval value)
 		dim out
 		
 		select case lcase(typename(value))
@@ -478,11 +483,11 @@ class JSON
 				out = """" & typename(value) & """"
 		end select
 		
-		prepareValue = out
+		serializeValue = out
 	end function
 	
 	
-	private function prepareArray(byref arr)
+	private function serializeArray(byref arr)
 		dim i, j, dimensions, out, arr2, elm, val
 		
 		out = "["
@@ -528,11 +533,11 @@ class JSON
 				end if
 				
 				if isArray(val) or typeName(val) = "JSONarray" then
-					out = out & prepareArray(val)
+					out = out & serializeArray(val)
 				elseif isObject(val) then
-					out = out & prepareObject(val)
+					out = out & serializeObject(val)
 				else
-					out = out & prepareValue(val)
+					out = out & serializeValue(val)
 				end if
 				
 			next
@@ -541,16 +546,18 @@ class JSON
 		
 		out = out & "]"
 		
-		prepareArray = out
+		serializeArray = out
 	end function
 	
 	
-	private function prepareObject(obj)
-		dim out, prop, value, i
+	private function serializeObject(obj)
+		dim out, prop, value, i, pairs
 		out = "{"
 		
-		for i = 0 to ubound(obj.properties)
-			set prop = obj.properties(i)
+		pairs = obj.pairs
+		
+		for i = 0 to ubound(pairs)
+			set prop = pairs(i)
 			
 			if out <> "{" then out = out & ","
 			
@@ -560,22 +567,22 @@ class JSON
 				value = prop.value
 			end if
 			
-			if prop.name <> "[[root]]" then out = out & """" & prop & """:"
+			if prop.name <> "[[root]]" then out = out & """" & prop.name & """:"
 			
 			if isArray(value) or typeName(value) = "JSONarray" then
-				out = out & prepareArray(value)
+				out = out & serializeArray(value)
 				
 			elseif isObject(value) then
-				out = out & prepareObject(value)
+				out = out & serializeObject(value)
 				
 			else
-				out = out & prepareValue(value)
+				out = out & serializeValue(value)
 			end if
 		next
 		
 		out = out & "}"
 		
-		prepareObject = out
+		serializeObject = out
 	end function
 	
 	' 
@@ -655,7 +662,7 @@ class JSONarray
 end class
 
 
-class JSONproperty
+class JSONpair
 	dim i_name, i_value
 	dim i_parent
 	
@@ -670,7 +677,7 @@ class JSONproperty
 	
 	
 	public property get value
-		name = i_value
+		value = i_value
 	end property
 	
 	public property let value(val)

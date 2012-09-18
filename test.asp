@@ -85,7 +85,7 @@
 	
 	%>
 	<h3>Output</h3>
-	<pre><%'= jsonObj.write %></pre>
+	<pre><%= jsonObj.write %></pre>
 	
 	<%
 	set jsonObj = nothing
