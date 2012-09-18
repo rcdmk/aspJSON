@@ -3,7 +3,8 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title></title>
+	<title>ASPJSON</title>
+	
 	<style type="text/css">
 		body {
 			font-family: Arial, Helvetica, sans-serif;
@@ -22,6 +23,7 @@
 </head>
 <body>
 	<%
+	server.ScriptTimeout = 10
 	dim jsonObj, jsonString
 	
 	testLoad = true
@@ -36,9 +38,9 @@
 	jsonObj.debug = true
 	
 	if testLoad then
-		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"" } ] } }"
+		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] } }"
 		
-		jsonObj.load jsonString
+		jsonObj.parse jsonString
 		%>
 		<h3>Input</h3>
 		<pre><%= jsonString %></pre>
@@ -46,8 +48,8 @@
 	end if
 	
 	if testAdd then
-		dim arr, multArr
-		arr = Array("teste", 234.56, "mais teste", "234")
+		dim arr, multArr, nestedObject
+		arr = Array(1, "teste", 234.56, "mais teste", "234")
 		
 		redim multArr(1, 1)
 		multArr(0, 0) = "0,0"
@@ -60,6 +62,12 @@
 		jsonObj.add "idade", 25
 		jsonObj.add "lista", arr
 		jsonObj.add "lista2", multArr
+		
+		set nestedObject = new JSON
+		nestedObject.add "sub1", "value of sub1"
+		nestedObject.add "sub2", "value of sub2"
+		
+		jsonObj.add "nested", nestedObject
 	end if
 	
 	
@@ -78,12 +86,18 @@
 		jsonObj.change "nome", "Mario"
 		
 		response.write "nome after: " & jsonObj.value("nome") & "<br>"
+		
+		jsonObj.change "nonExisting", -1
+		
+		response.write "Non existing property is created with: " & jsonObj.value("nonExisting") & "<br>"
 	end if
-	
-	
 	
 	%>
 	<h3>Output</h3>
-	<pre><%= jsonObj.write %></pre>
+	<pre><%= jsonObj.write %></pre>	
+	<%
+	
+	set jsonObj = nothing
+	%>
 </body>
 </html>
