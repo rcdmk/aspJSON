@@ -69,7 +69,7 @@ class JSON
 	public function parse(byval strJson)
 		dim regex, i, size, char, prevchar, quoted
 		dim mode, item, key, value, openArray, openObject
-		dim actualLCID, tmpArray, addedToArray
+		dim actualLCID, tmpArray, tmpObj, addedToArray
 		dim root, currentObject, currentArray
 		
 		log("Load string: """ & strJson & """")
@@ -123,7 +123,7 @@ class JSON
 						addedToArray = false
 						
 						' Object inside an array
-						if isObject(currentArray) then
+						if typeName(currentArray) = "JSONarray" then
 							if currentArray.depth >= currentObject.depth then
 								set item.parent = currentArray
 								tmpArray = currentArray.items
@@ -334,9 +334,19 @@ class JSON
 					if isobject(currentArray.parent) then
 						if typeName(currentArray.parent) = "JSONarray" then
 							set currentArray = currentArray.parent
-						else
-							set currentArray = nothing
-							currentArray = null
+							
+						elseif typeName(currentArray.parent) = "JSON" then
+							set tmpObj = currentArray.parent
+							
+							while typeName(tmpObj) = "JSON" and isObject(tmpObj)
+								if isObject(tmpObj.parent) then
+									set tmpObj = tmpObj.parent
+								else
+									tmpObj = tmpObj.parent
+								end if
+							wend
+							
+							set currentArray = tmpObj
 						end if
 					else
 						currentArray = currentArray.parent
@@ -352,6 +362,14 @@ class JSON
 					if isobject(currentObject.parent) then
 						if typeName(currentObject.parent) = "JSON" then
 							set currentObject = currentObject.parent
+						elseif typeName(currentObject.parent) = "JSONarray" then
+							set tmpObj = currentObject.parent
+							
+							while typeName(tmpObj) = "JSONarray" and isObject(tmpObj)
+								set tmpObj = tmpObj.parent
+							wend
+							
+							set currentObject = tmpObj
 						end if
 					else
 						currentObject = currentObject.parent
