@@ -27,8 +27,8 @@
 	
 	testLoad = false
 	testAdd = true
-	testValue = false
-	testChange = false
+	testValue = true
+	testChange = true
 	
 	
 	
@@ -47,8 +47,8 @@
 	end if
 	
 	if testAdd then
-		dim arr, multArr
-		arr = Array("teste", 234.56, "mais teste", "234")
+		dim arr, multArr, nestedObject
+		arr = Array(1, "teste", 234.56, "mais teste", "234")
 		
 		redim multArr(1, 1)
 		multArr(0, 0) = "0,0"
@@ -59,8 +59,14 @@
 		
 		jsonObj.add "nome", "Jozé"
 		jsonObj.add "idade", 25
-		'jsonObj.add "lista", arr
-		'jsonObj.add "lista2", multArr
+		jsonObj.add "lista", arr
+		jsonObj.add "lista2", multArr
+		
+		set nestedObject = new JSON
+		nestedObject.add "sub1", "value of sub1"
+		nestedObject.add "sub2", "value of sub2"
+		
+		jsonObj.add "nested", nestedObject
 	end if
 	
 	
@@ -79,15 +85,17 @@
 		jsonObj.change "nome", "Mario"
 		
 		response.write "nome after: " & jsonObj.value("nome") & "<br>"
+		
+		jsonObj.change "nonExisting", -1
+		
+		response.write "Non existing property is created with: " & jsonObj.value("nonExisting") & "<br>"
 	end if
-	
-	
 	
 	%>
 	<h3>Output</h3>
-	<pre><%= jsonObj.write %></pre>
-	
+	<pre><%= jsonObj.write %></pre>	
 	<%
+	
 	set jsonObj = nothing
 	%>
 </body>

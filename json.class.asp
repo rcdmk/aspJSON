@@ -677,7 +677,11 @@ class JSONpair
 	
 	
 	public property get value
-		value = i_value
+		if isObject(i_value) then
+			set value = i_value
+		else
+			value = i_value
+		end if
 	end property
 	
 	public property let value(val)
