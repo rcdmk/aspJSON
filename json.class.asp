@@ -44,6 +44,7 @@ class JSON
 	private sub class_initialize()
 		i_depth = 0
 		i_debug = false
+		set i_parent = nothing
 		redim i_properties(-1)
 	end sub
 	
@@ -58,7 +59,7 @@ class JSON
 	
 	
 	' Methods
-	public sub load(byval strJson)
+	public sub parse(byval strJson)
 		dim regex, i, size, char, prevchar, quoted
 		dim mode, item, key, value, openArray, openObject
 		dim actualLCID, tmpArray, addedToArray
@@ -295,7 +296,7 @@ class JSON
 					end if
 					
 					if not useArray then
-						currentObject.value.add key, value
+						currentObject.add key, value
 						log("Value added: """ & key & """")
 					end if
 				end if

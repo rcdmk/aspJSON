@@ -25,10 +25,10 @@
 	server.ScriptTimeout = 10
 	dim jsonObj, jsonString
 	
-	testLoad = false
-	testAdd = true
-	testValue = true
-	testChange = true
+	testLoad = true
+	testAdd = false
+	testValue = false
+	testChange = false
 	
 	
 	
@@ -37,9 +37,13 @@
 	jsonObj.debug = true
 	
 	if testLoad then
-		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"" } ] } }"
+		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456 }"
 		
-		jsonObj.load jsonString
+		'jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"" } }"
+		
+		'jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"" } ] } }"
+		
+		jsonObj.parse jsonString
 		%>
 		<h3>Input</h3>
 		<pre><%= jsonString %></pre>
