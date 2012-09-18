@@ -3,7 +3,8 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title></title>
+	<title>ASPJSON</title>
+	
 	<style type="text/css">
 		body {
 			font-family: Arial, Helvetica, sans-serif;
@@ -41,7 +42,9 @@
 		
 		'jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]] }"
 		
-		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": { ""nested1"": 1, ""nested2"": [1, 2, 3]} } }"
+		'jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": { ""nested1"": 1, ""nested2"": [1, 2, 3]} } }"
+		
+		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" } ] } }"
 		
 		'jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"" } ] } }"
 		

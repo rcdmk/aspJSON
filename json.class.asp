@@ -1,5 +1,12 @@
 <%
-' Base JSON object class
+' JSON object class 2.0a - September, 17th - 2012
+' By RCDMK - rcdmk@rcdmk.com
+'
+' Licence:
+' Creative Commons BY: http://creativecommons.org/licenses/by/3.0/
+' You are free to use, share, distribute or change this work, as long as you mantain a reference
+' to the author in this file and, when applicable, in a readme, about or some form of credit screen
+' or dialog on the application where this code is being used if the source of the app is not distributed
 
 class JSON
 	dim i_debug, i_depth, i_parent
@@ -115,17 +122,22 @@ class JSON
 						
 						addedToArray = false
 						
-						if isArray(currentArray) then
+						' Object inside an array
+						if isObject(currentArray) then
 							if currentArray.depth >= currentObject.depth then
 								set item.parent = currentArray
 								tmpArray = currentArray.items
 								
-								ArrayPush currentArray.items, item
+								ArrayPush tmpArray, item
+								
+								currentArray.items = tmpArray
+								
 								addedToArray = true
 							end if
 						end if
 						
-						if not addedToArray then currentObject.add key, item						
+						if not addedToArray then currentObject.add key, item
+												
 						set currentObject = item						
 					end if
 					
@@ -145,9 +157,11 @@ class JSON
 						if currentArray.depth >= currentObject.depth then
 							set item.parent = currentArray
 							tmpArray = currentArray.items
+							
 							ArrayPush tmpArray, item
 							
 							currentArray.items = tmpArray
+							
 							addedToArray = true
 						end if
 					end if
@@ -155,7 +169,6 @@ class JSON
 					if not addedToArray then
 						set item.parent = currentObject
 						
-						tmpArray = currentObject.pairs
 						currentObject.add key, item
 					end if
 					
@@ -319,7 +332,12 @@ class JSON
 					log("Close array</ul>")
 					
 					if isobject(currentArray.parent) then
-						set currentArray = currentArray.parent
+						if typeName(currentArray.parent) = "JSONarray" then
+							set currentArray = currentArray.parent
+						else
+							set currentArray = nothing
+							currentArray = null
+						end if
 					else
 						currentArray = currentArray.parent
 					end if
@@ -332,7 +350,9 @@ class JSON
 					log("Close object</ul>")
 					
 					if isobject(currentObject.parent) then
-						set currentObject = currentObject.parent
+						if typeName(currentObject.parent) = "JSON" then
+							set currentObject = currentObject.parent
+						end if
 					else
 						currentObject = currentObject.parent
 					end if
@@ -359,7 +379,7 @@ class JSON
 		getProperty prop, p
 		
 		if isObject(p) then
-			err.raise 1, "A property already exists with the name: " & prop & "."
+			err.raise 1, "Property already exists", "A property already exists with the name: " & prop & "."
 		else
 			dim item
 			set item = new JSONpair
@@ -394,7 +414,7 @@ class JSON
 				value = p.value
 			end if
 		else
-			err.raise 1, "Property " & prop & " doesn't exists."
+			err.raise 2, "Property doesn't exists", "Property " & prop & " doesn't exists."
 		end if
 	end function
 	
@@ -461,96 +481,6 @@ class JSON
 	
 	
 	' Helpers
-	private function serializeValue(byval value)
-		dim out
-		
-		select case lcase(typename(value))
-			case "null", "nothing"
-				out = "null"
-			
-			case "boolean"
-				out = lcase(value)
-			
-			case "byte", "integer", "long", "single", "double", "currency", "decimal"
-				out = value
-			
-			case "string", "char"
-				out = """" & value & """"
-			
-			case else
-				out = """" & typename(value) & """"
-		end select
-		
-		serializeValue = out
-	end function
-	
-	
-	private function serializeArray(byref arr)
-		dim i, j, dimensions, out, arr2, elm, val
-		
-		out = "["
-		
-		if isobject(arr) then
-			arr2 = arr.items
-		else
-			arr2 = arr
-		end if
-		
-		dimensions = NumDimensions(arr2)
-		
-		for i = 1 to dimensions
-			if i > 1 then out = out & ","
-			
-			if dimensions > 1 then out = out & "["
-			
-			for j = 0 to ubound(arr2, i)
-				if dimensions > 1 then
-					if isobject(arr2(i - 1, j)) then
-						set elm = arr2(i - 1, j)
-					else
-						elm = arr2(i - 1, j)
-					end if
-				else
-					if isobject(arr2(j)) then
-						set elm = arr2(j)
-					else
-						elm = arr2(j)
-					end if
-				end if
-				
-				if j > 0 then out = out & ","
-				
-				
-				if isobject(elm) then
-					if typeName(elm) = "JSONarray" then
-						val = elm.items
-					elseif isObject(elm.value) then
-						set val = elm.value
-					else
-						val = elm.value
-					end if
-				else
-					val = elm
-				end if
-				
-				if isArray(val) or typeName(val) = "JSONarray" then
-					out = out & serializeArray(val)
-				elseif isObject(val) then
-					out = out & serializeObject(val)
-				else
-					out = out & serializeValue(val)
-				end if
-				
-			next
-			if dimensions > 1 then out = out & "]"
-		next
-		
-		out = out & "]"
-		
-		serializeArray = out
-	end function
-	
-	
 	private function serializeObject(obj)
 		dim out, prop, value, i, pairs
 		out = "{"
@@ -568,7 +498,7 @@ class JSON
 				value = prop.value
 			end if
 			
-			if prop.name <> "[[root]]" then out = out & """" & prop.name & """:"
+			out = out & """" & prop.name & """:"
 			
 			if isArray(value) or typeName(value) = "JSONarray" then
 				out = out & serializeArray(value)
@@ -585,6 +515,104 @@ class JSON
 		
 		serializeObject = out
 	end function
+	
+	
+	private function serializeValue(byval value)
+		dim out
+		
+		select case lcase(typename(value))
+			case "null", "nothing"
+				out = "null"
+			
+			case "boolean"
+				out = lcase(value)
+			
+			case "byte", "integer", "long", "single", "double", "currency", "decimal"
+				out = value
+			
+			case "string", "char", "empty"
+				out = """" & value & """"
+			
+			case else
+				out = """" & typename(value) & """"
+		end select
+		
+		serializeValue = out
+	end function
+	
+	
+	private function serializeArray(byref arr)
+		dim i, j, dimensions, out, innerArray, elm, val
+		
+		out = "["
+		
+		if isobject(arr) then
+			innerArray = arr.items
+		else
+			innerArray = arr
+		end if
+		
+		dimensions = NumDimensions(innerArray)
+		
+		for i = 1 to dimensions
+			if i > 1 then out = out & ","
+			
+			if dimensions > 1 then out = out & "["
+			
+			for j = 0 to ubound(innerArray, i)
+				if j > 0 then out = out & ","
+				
+				'multidimentional
+				if dimensions > 1 then
+					if isobject(innerArray(i - 1, j)) then
+						set elm = innerArray(i - 1, j)
+					else
+						elm = innerArray(i - 1, j)
+					end if
+				else
+					if isobject(innerArray(j)) then
+						set elm = innerArray(j)
+					else
+						elm = innerArray(j)
+					end if
+				end if
+								
+				if isobject(elm) then
+					if typeName(elm) = "JSON" then
+						set val = elm
+					
+					elseif typeName(elm) = "JSONarray" then
+						val = elm.items
+						
+					elseif isObject(elm.value) then
+						set val = elm.value
+						
+					else
+						val = elm.value
+					end if
+				else
+					val = elm
+				end if
+				
+				if isArray(val) or typeName(val) = "JSONarray" then
+					out = out & serializeArray(val)
+					
+				elseif isObject(val) then
+					out = out & serializeObject(val)
+					
+				else
+					out = out & serializeValue(val)
+				end if
+				
+			next
+			if dimensions > 1 then out = out & "]"
+		next
+		
+		out = out & "]"
+		
+		serializeArray = out
+	end function
+	
 	
 	' 
 	private Function NumDimensions(byref arr) 
@@ -614,6 +642,8 @@ class JSON
 end class
 
 
+' JSON array class
+' Represents an array of JSON objects and values
 class JSONarray
 	dim i_items, i_depth, i_parent
 
@@ -663,6 +693,8 @@ class JSONarray
 end class
 
 
+' JSON pair class
+' represents a name/value pair of a JSON object
 class JSONpair
 	dim i_name, i_value
 	dim i_parent
