@@ -1,4 +1,4 @@
-<%
+ï»¿<%
 ' JSON object class 2.0a - September, 17th - 2012
 ' By RCDMK - rcdmk@rcdmk.com
 '
@@ -186,9 +186,9 @@ class JSON
 					mode = "closeKey"
 				end if
 			
-			' Preenche a chave até encontrar uma aspa dupla
+			' Preenche a chave atÃ© encontrar uma aspa dupla
 			elseif mode = "closeKey" then
-				' Se encontrar, então inicia a busca por valores
+				' Se encontrar, entÃ£o inicia a busca por valores
 				if char = """" and prevchar <> "\" then
 					log("Close key: """ & key & """")
 					mode = "preValue"
@@ -196,7 +196,7 @@ class JSON
 					key = key & char
 				end if
 			
-			' Espera até os : para iniciar um valor
+			' Espera atÃ© os : para iniciar um valor
 			elseif mode = "preValue" then
 				if char = ":" then
 					mode = "openValue"
@@ -207,20 +207,20 @@ class JSON
 			elseif mode = "openValue" then
 				value = ""
 				
-				' Se abrir aspas duplas, começa uma string
+				' Se abrir aspas duplas, comeÃ§a uma string
 				if char = """" then
 					log("Open string value")
 					quoted = true
 					mode = "closeValue"
 				
-				' Se abir [ começa um array
+				' Se abir [ comeÃ§a um array
 				elseif char = "[" then
 					log("Open array value")
 					quoted = false
 					mode = "init"
 					i = i - 1
 				
-				' Se abir [ começa um array
+				' Se abir [ comeÃ§a um array
 				elseif char = "{" then
 					log("Open object value")
 					quoted = false
@@ -238,7 +238,7 @@ class JSON
 					end if
 				end if
 			
-			' Preenche o valor até finalizar
+			' Preenche o valor atÃ© finalizar
 			elseif mode = "closeValue" then
 				
 				if quoted then
@@ -499,7 +499,7 @@ class JSON
 	
 	
 	' Helpers
-	private function serializeObject(obj)
+	public function serializeObject(obj)
 		dim out, prop, value, i, pairs
 		out = "{"
 		
@@ -535,7 +535,7 @@ class JSON
 	end function
 	
 	
-	private function serializeValue(byval value)
+	public function serializeValue(byval value)
 		dim out
 		
 		select case lcase(typename(value))
@@ -559,7 +559,7 @@ class JSON
 	end function
 	
 	
-	private function serializeArray(byref arr)
+	public function serializeArray(byref arr)
 		dim i, j, dimensions, out, innerArray, elm, val
 		
 		out = "["
@@ -644,7 +644,7 @@ class JSON
 		NumDimensions = dimensions - 1 
 	End Function 
 	
-	private function ArrayPush(byref arr, byref value)
+	public function ArrayPush(byref arr, byref value)
 		redim preserve arr(ubound(arr) + 1)
 		if isobject(value) then
 			set arr(ubound(arr)) = value
@@ -708,6 +708,42 @@ class JSONarray
 			set i_items(i) = nothing
 		next
 	end sub
+	
+	public sub Push(byref value)
+		dim js
+		
+		if typeName(i_parent) = "JSON" then
+			set js = i_parent
+		else
+			set js = new JSON
+			instantiated = true
+		end if
+		
+		js.ArrayPush i_items, value
+		
+		set js = nothing
+	end sub
+	
+	public function Serialize()
+		dim js, out
+		
+		if typeName(i_parent) = "JSON" then
+			set js = i_parent
+		else
+			set js = new JSON
+			instantiated = true
+		end if
+		
+		out = js.SerializeArray(me)
+		
+		set js = nothing
+		
+		Serialize = out
+	end function
+	
+	public function Write()
+		Response.Write Serialize()
+	end function
 end class
 
 
