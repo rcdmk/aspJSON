@@ -42,3 +42,17 @@ You are free to use, share, distribute or change this work, as long as you manta
 	
 	oJSON.Write()
 	
+	
+If you want to use arrays, I have something for you too
+
+    ' instantiate the class
+	Dim oJSONarray = New JSONarray
+	
+	' add something to the array
+	oJSONarray.Push oJSON 	' Can be JSON objects, and even JSON arrays
+	oJSONarray.Push 1.25 	' Can be numbers
+	oJSONarray.Push "and strings too"
+	
+	' write to page
+	oJSONarray.Write() ' Gess what? This does the same as the Write method from JSON object
+	

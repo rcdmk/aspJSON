@@ -24,16 +24,18 @@
 <body>
 	<%
 	server.ScriptTimeout = 10
-	dim jsonObj, jsonString
+	dim jsonObj, jsonString, jsonArr
 	
 	testLoad = true
 	testAdd = false
 	testValue = false
 	testChange = false
 	
+	testArrayPush = true
 	
 	
 	set jsonObj = new json
+	set jsonArr = new jsonArray
 	
 	jsonObj.debug = true
 	
@@ -97,7 +99,19 @@
 	<pre><%= jsonObj.write %></pre>	
 	<%
 	
+	if testArrayPush then
+		jsonArr.Push jsonObj
+		jsonArr.Push 1
+		jsonArr.Push "strings too"
+		%>
+		<h3>Array Output</h3>
+		<pre><%= jsonArr.write %></pre>	
+		<%
+	end if
+	
+	
 	set jsonObj = nothing
+	set jsonArr = nothing
 	%>
 </body>
 </html>
