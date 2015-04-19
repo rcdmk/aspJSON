@@ -141,7 +141,7 @@ class JSON
 						addedToArray = false
 						
 						' Object is inside an array
-						if typeName(currentArray) = "JSONarray" then
+						if GetTypeName(currentArray) = "JSONarray" then
 							if currentArray.depth >= currentObject.depth then
 								' Add it to the array
 								set item.parent = currentArray
@@ -313,7 +313,7 @@ class JSON
 						' we add it to the object instead
 						if isObject(currentObject) then
 							if isObject(currentObject.parent) then
-								if typeName(currentObject.parent) = "JSONarray" then useArray = false
+								if GetTypeName(currentObject.parent) = "JSONarray" then useArray = false
 							end if
 						end if
 						
@@ -363,15 +363,15 @@ class JSON
 					
 					' If it's and open array, we close it and set the current array as its parent
 					if isobject(currentArray.parent) then
-						if typeName(currentArray.parent) = "JSONarray" then
+						if GetTypeName(currentArray.parent) = "JSONarray" then
 							set currentArray = currentArray.parent
 						
 						' if the parent is an object
-						elseif typeName(currentArray.parent) = "JSON" then
+						elseif GetTypeName(currentArray.parent) = "JSON" then
 							set tmpObj = currentArray.parent
 							
 							' we search for the next parent array to set the current array
-							while typeName(tmpObj) = "JSON" and isObject(tmpObj)
+							while GetTypeName(tmpObj) = "JSON" and isObject(tmpObj)
 								if isObject(tmpObj.parent) then
 									set tmpObj = tmpObj.parent
 								else
@@ -394,15 +394,15 @@ class JSON
 					
 					' If it's an open object, we close it and set the current object as it's parent
 					if isobject(currentObject.parent) then
-						if typeName(currentObject.parent) = "JSON" then
+						if GetTypeName(currentObject.parent) = "JSON" then
 							set currentObject = currentObject.parent
 						
 						' If the parent is and array
-						elseif typeName(currentObject.parent) = "JSONarray" then
+						elseif GetTypeName(currentObject.parent) = "JSONarray" then
 							set tmpObj = currentObject.parent
 							
 							' we search for the next parent object to set the current object
-							while typeName(tmpObj) = "JSONarray" and isObject(tmpObj)
+							while GetTypeName(tmpObj) = "JSONarray" and isObject(tmpObj)
 								set tmpObj = tmpObj.parent
 							wend
 							
@@ -540,7 +540,7 @@ class JSON
 	' Helpers
 	' Serializes a JSON object to JSON formatted string
 	public function serializeObject(obj)
-		dim out, prop, value, i, pairs
+		dim out, prop, value, i, pairs, valueType
 		out = "{"
 		
 		pairs = obj.pairs
@@ -558,7 +558,7 @@ class JSON
 			
 			out = out & """" & prop.name & """:"
 			
-			if isArray(value) or typeName(value) = "JSONarray" then
+			if isArray(value) or GetTypeName(value) = "JSONarray" then
 				out = out & serializeArray(value)
 				
 			elseif isObject(value) then
@@ -579,7 +579,7 @@ class JSON
 	public function serializeValue(byval value)
 		dim out
 		
-		select case lcase(typename(value))
+		select case lcase(GetTypeName(value))
 			case "null", "nothing"
 				out = "null"
 			
@@ -593,7 +593,7 @@ class JSON
 				out = """" & value & """"
 			
 			case else
-				out = """" & typename(value) & """"
+				out = """" & GetTypeName(value) & """"
 		end select
 		
 		serializeValue = out
@@ -610,7 +610,7 @@ class JSON
 		else
 			innerArray = arr
 		end if
-		
+
 		dimensions = NumDimensions(innerArray)
 		
 		for i = 1 to dimensions
@@ -637,10 +637,10 @@ class JSON
 				end if
 								
 				if isobject(elm) then
-					if typeName(elm) = "JSON" then
+					if GetTypeName(elm) = "JSON" then
 						set val = elm
 					
-					elseif typeName(elm) = "JSONarray" then
+					elseif GetTypeName(elm) = "JSONarray" then
 						val = elm.items
 						
 					elseif isObject(elm.value) then
@@ -653,7 +653,7 @@ class JSON
 					val = elm
 				end if
 				
-				if isArray(val) or typeName(val) = "JSONarray" then
+				if isArray(val) or GetTypeName(val) = "JSONarray" then
 					out = out & serializeArray(val)
 					
 				elseif isObject(val) then
@@ -700,6 +700,44 @@ class JSON
 		ArrayPush = arr
 	end function
 	
+	' Load properties from a ADO RecordSet object
+	public sub LoadRecordSet(byref rs)
+		dim arr, obj, field
+		
+		set arr = new JSONArray	
+		
+		while not rs.eof
+			set obj = new JSON
+		
+			for each field in rs.fields
+				obj.Add field.name, field.value
+			next
+			
+			arr.Push obj
+			
+			rs.movenext
+		wend
+		
+		set obj = nothing
+		
+		add "data", arr
+	end sub
+	
+	' returns the value's type name
+	public function GetTypeName(byval value)
+		dim valueType
+	
+		on error resume next
+			valueType = typeName(value)
+			
+			if err.number <> 0 then
+				if varType(value) = 14 then valueType = "Decimal"
+			end if
+		on error goto 0
+		
+		GetTypeName = valueType
+	end function
+	
 	' Used to write the log messages to the response on debug mode
 	private sub log(byval msg)
 		if i_debug then response.write "<li>" & msg & "</li>" & vbcrlf
@@ -724,6 +762,11 @@ class JSONarray
 			err.raise 1, "The value assigned is not an array."
 		end if
 	end property	
+	
+	' The length of the array
+	public property get length
+		length = ubound(i_items) + 1
+	end property
 	
 	' The depth of the array in the chain (starting with 1)
 	public property get depth
@@ -760,9 +803,9 @@ class JSONarray
 	
 	' Adds a value to the array
 	public sub Push(byref value)
-		dim js
+		dim js, instantiated
 		
-		if typeName(i_parent) = "JSON" then
+		if not isEmpty(i_parent) then
 			set js = i_parent
 		else
 			set js = new JSON
@@ -771,15 +814,34 @@ class JSONarray
 		
 		js.ArrayPush i_items, value
 		
-		set js = nothing
+		if instantiated then set js = nothing
+	end sub
+	
+	' Load properties from a ADO RecordSet object
+	public sub LoadRecordSet(byref rs)
+		dim obj, field
+		
+		while not rs.eof
+			set obj = new JSON
+		
+			for each field in rs.fields
+				obj.Add field.name, field.value
+			next
+			
+			Push obj			
+			
+			rs.movenext
+		wend
+		
+		'set obj = nothing
 	end sub
 	
 	' Serializes this JSONarray object in JSON formatted string value
 	' (uses the JSON.SerializeArray method)
 	public function Serialize()
-		dim js, out
+		dim js, out, instantiated
 		
-		if typeName(i_parent) = "JSON" then
+		if not isEmpty(i_parent) then
 			set js = i_parent
 		else
 			set js = new JSON
@@ -788,7 +850,7 @@ class JSONarray
 		
 		out = js.SerializeArray(me)
 		
-		set js = nothing
+		if instantiated then set js = nothing
 		
 		Serialize = out
 	end function

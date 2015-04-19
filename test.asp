@@ -26,18 +26,19 @@
 	server.ScriptTimeout = 10
 	dim jsonObj, jsonString, jsonArr
 	
-	testLoad = true
+	testLoad = false
 	testAdd = false
 	testValue = false
 	testChange = false
 	
-	testArrayPush = true
+	testArrayPush = false
 	
+	testLoadRecordset = true
 	
 	set jsonObj = new json
 	set jsonArr = new jsonArray
 	
-	jsonObj.debug = true
+	jsonObj.debug = false
 	
 	if testLoad then
 		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] } }"
@@ -94,22 +95,67 @@
 		response.write "Non existing property is created with: " & jsonObj.value("nonExisting") & "<br>"
 	end if
 	
-	%>
-	<h3>Output</h3>
-	<pre><%= jsonObj.write %></pre>	
-	<%
-	
 	if testArrayPush then
 		jsonArr.Push jsonObj
 		jsonArr.Push 1
 		jsonArr.Push "strings too"
-		%>
-		<h3>Array Output</h3>
-		<pre><%= jsonArr.write %></pre>	
+	end if	
+	
+	if testLoadRecordset then
+		%><h3>Load a Recordset</h3>
+		<!--
+		   METADATA    
+		   TYPE="TypeLib"    
+		   NAME="Microsoft ActiveX Data Objects 2.5 Library"    
+		   UUID="{00000205-0000-0010-8000-00AA006D2EA4}"    
+		   VERSION="2.5"
+		-->
 		<%
-	end if
+		dim rs
+		set rs = createObject("ADODB.Recordset")
+		
+		' prepera an in memory recordset 
+		' could be, and mostly, loaded from a database
+		rs.CursorType = adOpenKeyset
+		rs.CursorLocation = adUseClient
+		rs.LockType = adLockOptimistic
+		
+		rs.Fields.Append "ID", adInteger, , adFldKeyColumn
+		rs.Fields.Append "Nome", adVarChar, 50, adFldMayBeNull
+		rs.Fields.Append "Valor", adDecimal, 14, adFldMayBeNull
+		rs.Fields("Valor").NumericScale = 2
+		
+		rs.Open
+		
+		rs.AddNew
+		rs("ID") = 1
+		rs("Nome") = "Nome 1"
+		rs("Valor") = 10.99
+		rs.Update
+		
+		rs.AddNew
+		rs("ID") = 2
+		rs("Nome") = "Nome 2"
+		rs("Valor") = 29.90
+		rs.Update
+		
+		rs.moveFirst		
+		jsonObj.LoadRecordSet rs
+		' or
+		rs.moveFirst
+		jsonArr.LoadRecordSet rs
+		
+		rs.Close
+		
+		set rs = nothing
+	end if	
+	%>
+	<h3>Output</h3>
+	<pre><%= jsonObj.write %></pre>	
 	
-	
+	<h3>Array Output</h3>
+	<pre><%= jsonArr.write %></pre>	
+	<%	
 	set jsonObj = nothing
 	set jsonArr = nothing
 	%>
