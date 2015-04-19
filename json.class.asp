@@ -1,18 +1,30 @@
 ﻿<%
-' JSON object class 2.0a - September, 17th - 2012
-' By RCDMK - rcdmk@rcdmk.com
+' JSON object class 2.1 - October, 10th - 2012
 '
 ' Licence:
-' Creative Commons BY: http://creativecommons.org/licenses/by/3.0/
-' You are free to use, share, distribute or change this work, as long as you mantain a reference
-' to the author in this file and, when applicable, in a readme, about or some form of credit screen
-' or dialog on the application where this code is being used if the source of the app is not distributed
+' The MIT License (MIT)
+' Copyright (c) 2012 RCDMK - rcdmk@rcdmk.com
+' 
+' Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+' associated documentation files (the "Software"), to deal in the Software without restriction,
+' including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+' and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+' subject to the following conditions:
+' 
+' The above copyright notice and this permission notice shall be included in all copies or substantial
+' portions of the Software.
+' 
+' THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+' NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+' IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+' WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+' SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 class JSON
 	dim i_debug, i_depth, i_parent
 	dim i_properties
 
-	' Properties
+	' Set to true to show the internals of the parsing mecanism
 	public property get debug
 		debug = i_debug
 	end property
@@ -22,6 +34,7 @@ class JSON
 	end property
 	
 	
+	' The depth of the object in the chain, starting with 1
 	public property get depth
 		depth = i_depth
 	end property
@@ -31,11 +44,13 @@ class JSON
 	end property
 	
 	
+	' The property pairs ("name": "value" - pairs)
 	public property get pairs
 		pairs = i_properties
 	end property
 	
 	
+	' The parent object
 	public property get parent
 		set parent = i_parent
 	end property	
@@ -65,7 +80,7 @@ class JSON
 	end sub
 	
 	
-	' Methods
+	' Parse a JSON string and populate the object
 	public function parse(byval strJson)
 		dim regex, i, size, char, prevchar, quoted
 		dim mode, item, key, value, openArray, openObject
@@ -74,6 +89,7 @@ class JSON
 		
 		log("Load string: """ & strJson & """")
 		
+		' Store the actual LCID and use the en-US to conform with the JSON standard
 		actualLCID = session.LCID
 		session.LCID = 1033
 		
@@ -91,12 +107,14 @@ class JSON
 		regex.ignoreCase = true
 		regex.pattern = "\w"
 		
+		' setup
 		set root = me
 		key = "[[root]]"
 		mode = "init"
 		quoted = false
 		set currentObject = me
 		
+		' main state machine
 		do while i < size
 			i = i + 1
 			char = mid(strJson, i, 1)
@@ -122,9 +140,10 @@ class JSON
 						
 						addedToArray = false
 						
-						' Object inside an array
+						' Object is inside an array
 						if typeName(currentArray) = "JSONarray" then
 							if currentArray.depth >= currentObject.depth then
+								' Add it to the array
 								set item.parent = currentArray
 								tmpArray = currentArray.items
 								
@@ -153,8 +172,10 @@ class JSON
 					
 					addedToArray = false					
 					
+					' Array is inside an array
 					if isobject(currentArray) and openArray > 0 then
 						if currentArray.depth >= currentObject.depth then
+							' Add it to the array
 							set item.parent = currentArray
 							tmpArray = currentArray.items
 							
@@ -178,7 +199,7 @@ class JSON
 					mode = "openValue"
 				end if
 			
-			' Iniciando uma chave
+			' Init a key
 			elseif mode = "openKey" then
 				key = ""
 				if char = """" then
@@ -186,9 +207,9 @@ class JSON
 					mode = "closeKey"
 				end if
 			
-			' Preenche a chave até encontrar uma aspa dupla
+			' Fill in the key until finding a double quote "
 			elseif mode = "closeKey" then
-				' Se encontrar, então inicia a busca por valores
+				' If it finds a non scaped quotation, change to value mode
 				if char = """" and prevchar <> "\" then
 					log("Close key: """ & key & """")
 					mode = "preValue"
@@ -196,31 +217,31 @@ class JSON
 					key = key & char
 				end if
 			
-			' Espera até os : para iniciar um valor
+			' Wait until a colon char (:) to begin the value
 			elseif mode = "preValue" then
 				if char = ":" then
 					mode = "openValue"
 					log("Open value for """ & key & """")
 				end if
 			
-			' Iniciando um valor	
+			' Begining of value	
 			elseif mode = "openValue" then
 				value = ""
 				
-				' Se abrir aspas duplas, começa uma string
+				' If it begins with a double quote, its a string value
 				if char = """" then
 					log("Open string value")
 					quoted = true
 					mode = "closeValue"
 				
-				' Se abir [ começa um array
+				' If it begins with open square bracket ([), its an array
 				elseif char = "[" then
 					log("Open array value")
 					quoted = false
 					mode = "init"
 					i = i - 1
 				
-				' Se abir [ começa um array
+				' If it begins with open a bracket ({), its an object
 				elseif char = "{" then
 					log("Open object value")
 					quoted = false
@@ -228,7 +249,7 @@ class JSON
 					i = i - 1
 					
 				else
-					' Se for numero
+					' If its a number, start a numeric value
 					if regex.pattern <> "\d" then regex.pattern = "\d"
 					if regex.test(char) then
 						log("Open numeric value")
@@ -238,11 +259,10 @@ class JSON
 					end if
 				end if
 			
-			' Preenche o valor até finalizar
+			' Fill in the value until finish
 			elseif mode = "closeValue" then
 				
 				if quoted then
-					
 					if char = """" and prevchar <> "\" then
 						log("Close string value: """ & value & """")
 						mode = "addValue"
@@ -250,12 +270,13 @@ class JSON
 						value = value & char
 					end if
 				else
-					' Se for numero
+					' If is a numeric char
 					if regex.pattern <> "\d" then regex.pattern = "\d"
 					if regex.test(char) then
 						value = value & char
 					
-					' Se o valor anterior foi um numero
+					' If it's not a numeric char, but the prev char was a number
+					' used to catch separators and special numeric chars
 					elseif regex.test(prevchar) then
 						if char = "." or char = "e" then
 							value = value & char
@@ -271,7 +292,7 @@ class JSON
 					end if
 				end if
 			
-			' Adiciona o valor ao dicionario
+			' Add the value to the object or array
 			elseif mode = "addValue" then
 				if key <> "" then
 					dim useArray
@@ -284,15 +305,19 @@ class JSON
 					
 					quoted = false
 					
+					' If it's inside an array
 					if openArray > 0 and isObject(currentArray) then
 						useArray = true
 						
+						' If it's a property of an object that is inside the array
+						' we add it to the object instead
 						if isObject(currentObject) then
 							if isObject(currentObject.parent) then
 								if typeName(currentObject.parent) = "JSONarray" then useArray = false
 							end if
 						end if
 						
+						' else, we add it to the array
 						if useArray then
 							tmpArray = currentArray.items
 							ArrayPush tmpArray, value
@@ -312,32 +337,40 @@ class JSON
 				mode = "next"
 				i = i - 1
 			
-			' Muda o modo de acordo com o estado atual
+			' Change the current mode according to the current state
 			elseif mode = "next" then
 				if char = "," then
+					' If it's an array
 					if openArray > 0 and isObject(currentArray) then
+						' and the current object is a parent or sibling object
 						if currentArray.depth >= currentObject.depth then
+							' start a value
 							log("New value")
 							mode = "openValue"
 						else
+							' start an object key
 							log("New key")
 							mode = "openKey"
 						end if
 					else
+						' start an object key
 						log("New key")
 						mode = "openKey"
 					end if
-					
+				
 				elseif char = "]" then
 					log("Close array</ul>")
 					
+					' If it's and open array, we close it and set the current array as its parent
 					if isobject(currentArray.parent) then
 						if typeName(currentArray.parent) = "JSONarray" then
 							set currentArray = currentArray.parent
-							
+						
+						' if the parent is an object
 						elseif typeName(currentArray.parent) = "JSON" then
 							set tmpObj = currentArray.parent
 							
+							' we search for the next parent array to set the current array
 							while typeName(tmpObj) = "JSON" and isObject(tmpObj)
 								if isObject(tmpObj.parent) then
 									set tmpObj = tmpObj.parent
@@ -359,12 +392,16 @@ class JSON
 				elseif char = "}" then
 					log("Close object</ul>")
 					
+					' If it's an open object, we close it and set the current object as it's parent
 					if isobject(currentObject.parent) then
 						if typeName(currentObject.parent) = "JSON" then
 							set currentObject = currentObject.parent
+						
+						' If the parent is and array
 						elseif typeName(currentObject.parent) = "JSONarray" then
 							set tmpObj = currentObject.parent
 							
+							' we search for the next parent object to set the current object
 							while typeName(tmpObj) = "JSONarray" and isObject(tmpObj)
 								set tmpObj = tmpObj.parent
 							wend
@@ -391,7 +428,7 @@ class JSON
 		set parse = root
 	end function
 	
-	' Aciciona uma propriedade ao objeto
+	' Add a new property (key-value pair)
 	public sub add(byval prop, byval obj)
 		dim p
 		getProperty prop, p
@@ -420,7 +457,7 @@ class JSON
 		end if
 	end sub
 	
-	' Retorna o valor da propriedade
+	' Return the value of a property by its key
 	public function value(byval prop)
 		dim p
 		getProperty prop, p
@@ -436,8 +473,8 @@ class JSON
 		end if
 	end function
 	
-	' Altera uma propriedade do objeto
-	' Cria a propriedade se ela nao existir
+	' Change the value of a property
+	' Creates the property if it didn't exists
 	public sub change(byval prop, byval obj)
 		dim p
 		getProperty prop, p
@@ -460,7 +497,9 @@ class JSON
 		end if
 	end sub
 	
-	' Retorna a propriedade se existir
+	' Returns a property if it exists
+	' @param prop as string - the property name
+	' @param out outProp as variant - will be filled with the property value, null if not found
 	private sub getProperty(byval prop, byref outProp)
 		dim i, p
 		outProp = null
@@ -479,7 +518,7 @@ class JSON
 	end sub
 	
 	
-	' Devolve a representacao do objeto como string
+	' Serialize the current object to a JSON formatted string
 	public function Serialize()
 		dim actualLCID, out
 		actualLCID = session.LCID
@@ -492,13 +531,14 @@ class JSON
 		Serialize = out
 	end function
 	
-	' Escreve direto na pagina
+	' Writes the JSON serialized object to the response
 	public sub write()
 		response.write Serialize
 	end sub
 	
 	
 	' Helpers
+	' Serializes a JSON object to JSON formatted string
 	public function serializeObject(obj)
 		dim out, prop, value, i, pairs
 		out = "{"
@@ -534,7 +574,8 @@ class JSON
 		serializeObject = out
 	end function
 	
-	
+	' Serializes a value to a valid JSON formatted string representing the value
+	' (quoted for strings, the type name for objects, null for nothing and null values)
 	public function serializeValue(byval value)
 		dim out
 		
@@ -558,7 +599,7 @@ class JSON
 		serializeValue = out
 	end function
 	
-	
+	' Serializes an array or JSONarray object to JSON formatted string
 	public function serializeArray(byref arr)
 		dim i, j, dimensions, out, innerArray, elm, val
 		
@@ -632,18 +673,23 @@ class JSON
 	end function
 	
 	
-	' 
+	' Returns the number of dimensions an array has
 	private Function NumDimensions(byref arr) 
-		Dim dimensions : dimensions = 0 
-		On Error Resume Next 
-		Do While Err.number = 0 
-			dimensions = dimensions + 1 
-			UBound arr, dimensions 
-		Loop 
-		On Error Goto 0 
-		NumDimensions = dimensions - 1 
+		Dim dimensions
+		dimensions = 0 
+		
+		On Error Resume Next
+		
+		Do While Err.number = 0
+			dimensions = dimensions + 1
+			UBound arr, dimensions
+		Loop
+		On Error Goto 0
+		
+		NumDimensions = dimensions - 1
 	End Function 
 	
+	' Pushes (adds) a value to an array, expanding it
 	public function ArrayPush(byref arr, byref value)
 		redim preserve arr(ubound(arr) + 1)
 		if isobject(value) then
@@ -654,6 +700,7 @@ class JSON
 		ArrayPush = arr
 	end function
 	
+	' Used to write the log messages to the response on debug mode
 	private sub log(byval msg)
 		if i_debug then response.write "<li>" & msg & "</li>" & vbcrlf
 	end sub
@@ -665,6 +712,7 @@ end class
 class JSONarray
 	dim i_items, i_depth, i_parent
 
+	' The actual array items
 	public property get items
 		items = i_items
 	end property	
@@ -677,7 +725,7 @@ class JSONarray
 		end if
 	end property	
 	
-	
+	' The depth of the array in the chain (starting with 1)
 	public property get depth
 		depth = i_depth
 	end property
@@ -686,7 +734,7 @@ class JSONarray
 		i_depth = value
 	end property
 	
-	
+	' The parent object or array
 	public property get parent
 		set parent = i_parent
 	end property	
@@ -697,6 +745,7 @@ class JSONarray
 	end property
 	
 	
+	' Constructor and destructor
 	private sub class_initialize
 		redim i_items(-1)
 		depth = 0
@@ -709,6 +758,7 @@ class JSONarray
 		next
 	end sub
 	
+	' Adds a value to the array
 	public sub Push(byref value)
 		dim js
 		
@@ -724,6 +774,8 @@ class JSONarray
 		set js = nothing
 	end sub
 	
+	' Serializes this JSONarray object in JSON formatted string value
+	' (uses the JSON.SerializeArray method)
 	public function Serialize()
 		dim js, out
 		
@@ -741,6 +793,7 @@ class JSONarray
 		Serialize = out
 	end function
 	
+	' Writes the serialized array to the response
 	public function Write()
 		Response.Write Serialize()
 	end function
@@ -753,7 +806,7 @@ class JSONpair
 	dim i_name, i_value
 	dim i_parent
 	
-	
+	' The name or key of the pair
 	public property get name
 		name = i_name
 	end property
@@ -762,7 +815,7 @@ class JSONpair
 		i_name = val
 	end property
 	
-	
+	' The value of the pair
 	public property get value
 		if isObject(i_value) then
 			set value = i_value
@@ -779,7 +832,7 @@ class JSONpair
 		set i_value = val
 	end property
 	
-	
+	' The parent object
 	public property get parent
 		set parent = i_parent
 	end property	
@@ -788,6 +841,8 @@ class JSONpair
 		set i_parent = val
 	end property
 	
+	
+	' Constructor and destructor
 	private sub class_initialize
 	end sub
 	
