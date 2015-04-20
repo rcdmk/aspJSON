@@ -1,4 +1,4 @@
-#JSON object class 2.1
+#JSON object class 2.2
 ##By RCDMK - rcdmk@rcdmk.com
 
 ###Licence:
@@ -40,7 +40,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 	
 	oJSON.Write() ' this will write the output to the Response - equivalent to: Response.Write oJSON.Serialize()
 	
-	
 	' load and parse some JSON formatted string
 	jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] } }" ' double quotes here because of the VBScript quote scaping
 	
@@ -48,6 +47,28 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 	
 	oJSON.Write()
 	
+To load records from a database:
+	
+	' load records from an ADODB.Recordset
+	dim cn, rs
+	set cn = CreateObject("ADODB.Connection")
+	cn.Open "yourConnectionStringGoesHere"
+	
+	set rs = cn.execute("SELECT id, nome, valor FROM pedidos ORDER BY id ASC")
+	' this could also be:
+	' set rs = CreateObject("ADODB.Recordset")
+	' rs.Open "SELECT id, nome, valor FROM pedidos ORDER BY id ASC", cn	
+	
+	oJSON.LoadRecordset rs
+	oJSONarray.LoadRecordset rs
+	
+	rs.Close
+	cn.Close
+	set rs = Nothing
+	set cn = Nothing
+	
+	oJSON.Write() 		' outputs: {"data":[{"id":1,"nome":"nome 1","valor":10.99},{"id":2,"nome":"nome 2","valor":19.1}]}
+	oJSONarray.Write() 	' outputs: [{"id":1,"nome":"nome 1","valor":10.99},{"id":2,"nome":"nome 2","valor":19.1}]
 	
 If you want to use arrays, I have something for you too
 

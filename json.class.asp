@@ -1,5 +1,5 @@
 ﻿<%
-' JSON object class 2.1 - October, 10th - 2012
+' JSON object class 2.2 - October, 10th - 2012
 '
 ' Licence:
 ' The MIT License (MIT)
