@@ -157,7 +157,10 @@ class JSON
 							end if
 						end if
 						
-						if not addedToArray then currentObject.add key, item
+						if not addedToArray then
+							currentObject.add key, item
+							log("Added to parent object: """ & key & """")
+						end if
 												
 						set currentObject = item						
 					end if
@@ -258,6 +261,11 @@ class JSON
 						quoted = false
 						value = char
 						mode = "closeValue"
+					elseif char = "n" or char = "t" or char = "f" or char = "u" then
+						log("Open special value")
+						quoted = false
+						value = char
+						mode = "closeValue"
 					end if
 				end if
 			
@@ -272,25 +280,32 @@ class JSON
 						value = value & char
 					end if
 				else
-					' If is a numeric char
-					if regex.pattern <> "\d" then regex.pattern = "\d"
-					if regex.test(char) then
+					' possible boolean and null values
+					if regex.pattern <> "^(?:(?:t(?:r(?:ue?)?)?)|(?:f(?:a(?:l(?:se?)?)?)?)|(?:n(?:u(?:ll?)?))|(?:u(?:n(?:d(?:e(?:f(?:i(?:n(?:ed?)?)?)?)?)?)?)?))$" then regex.pattern = "^(?:(?:t(?:r(?:ue?)?)?)|(?:f(?:a(?:l(?:se?)?)?)?)|(?:n(?:u(?:ll?)?))|(?:u(?:n(?:d(?:e(?:f(?:i(?:n(?:ed?)?)?)?)?)?)?)?))$"
+					if regex.test(char) or regex.test(value) then
 						value = value & char
-					
-					' If it's not a numeric char, but the prev char was a number
-					' used to catch separators and special numeric chars
-					elseif regex.test(prevchar) then
-						if char = "." or char = "e" then
+						if value = "true" or value = "false" or value = "null" or value = "undefined" then mode = "addValue"
+					else
+						' If is a numeric char
+						if regex.pattern <> "\d" then regex.pattern = "\d"
+						if regex.test(char) then
 							value = value & char
+						
+						' If it's not a numeric char, but the prev char was a number
+						' used to catch separators and special numeric chars
+						elseif regex.test(prevchar) then
+							if char = "." or lcase(char) = "e" or lcase(char) = "-" or lcase(char) = "+" then
+								value = value & char
+							else
+								log("Close numeric value: " & value)
+								mode = "addValue"
+								i = i - 1
+							end if
 						else
 							log("Close numeric value: " & value)
 							mode = "addValue"
 							i = i - 1
 						end if
-					else
-						log("Close numeric value: " & value)
-						mode = "addValue"
-						i = i - 1
 					end if
 				end if
 			
@@ -301,8 +316,13 @@ class JSON
 					useArray = false
 					
 					if not quoted then
-						log("Value converted to number")
-						value = cdbl(value)
+						if isNumeric(value) then
+							log("Value converted to number")
+							value = cdbl(value)
+						else
+							log("Value converted to " & value)
+							value = eval(value)
+						end if
 					end if
 					
 					quoted = false
@@ -582,11 +602,18 @@ class JSON
 		dim out
 		
 		select case lcase(GetTypeName(value))
-			case "null", "nothing"
+			case "null"
 				out = "null"
 			
+			case "nothing"
+				out = "undefined"
+			
 			case "boolean"
-				out = lcase(value)
+				if value then
+					out = "true"
+				else
+					out = "false"
+				end if
 			
 			case "byte", "integer", "long", "single", "double", "currency", "decimal"
 				out = value
