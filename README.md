@@ -1,4 +1,4 @@
-#JSON object class 2.2
+#JSON object class 2.2.1
 ##By RCDMK - rcdmk[at]hotmail[dot]com
 
 ###Licence:
@@ -43,7 +43,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 	' load and parse some JSON formatted string
 	jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] } }" ' double quotes here because of the VBScript quote scaping
 	
-	oJSON.Parse jsonString
+	oJSON.Parse(jsonString) ' set this to a variable if your string to load can be an Array, since the function returns the parsed object and arrays are parsed to JSONarray objects
+	' if the string represents an object, the current object is returned so there is not need to set the return to a new variable
 	
 	oJSON.Write()
 	

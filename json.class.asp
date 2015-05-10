@@ -1,5 +1,5 @@
 ﻿<%
-' JSON object class 2.2 - October, 10th - 2012
+' JSON object class 2.2.1 - October, 10th - 2012
 '
 ' Licence:
 ' The MIT License (MIT)
@@ -133,7 +133,7 @@ class JSON
 				if char = "{" then
 					log("Create object<ul>")
 					
-					if key <> "[[root]]" then
+					if key <> "[[root]]" or GetTypeName(currentArray) = "JSONarray" then
 						' creates a new object
 						set item = new JSON
 						set item.parent = currentObject
@@ -152,6 +152,8 @@ class JSON
 								currentArray.items = tmpArray
 								
 								addedToArray = true
+
+								log("Added to the array")
 							end if
 						end if
 						
