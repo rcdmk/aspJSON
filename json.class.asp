@@ -133,7 +133,7 @@ class JSON
 				if char = "{" then
 					log("Create object<ul>")
 					
-					if key <> "[[root]]" or GetTypeName(currentArray) = "JSONarray" then
+					if key <> "[[root]]" or GetTypeName(root) = "JSONarray" then
 						' creates a new object
 						set item = new JSON
 						set item.parent = currentObject
