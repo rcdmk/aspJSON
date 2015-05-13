@@ -599,8 +599,8 @@ class JSON
 	' Serializes a value to a valid JSON formatted string representing the value
 	' (quoted for strings, the type name for objects, null for nothing and null values)
 	public function serializeValue(byval value)
-		dim out
-		
+		dim out, offset
+
 		select case lcase(GetTypeName(value))
 			case "null"
 				out = "null"
@@ -618,6 +618,11 @@ class JSON
 			case "byte", "integer", "long", "single", "double", "currency", "decimal"
 				out = value
 			
+			case "date"
+				offset = GetTimeZoneOffset()
+				
+				out = """" & year(value) & "-" & padZero(month(value), 2) & "-" & padZero(day(value), 2) & "T" & padZero(hour(value), 2) & ":" & padZero(minute(value), 2) & ":" & padZero(second(value), 2) & left(offset, 1) & padZero(mid(offset, 2), 2) & ":00"""
+			
 			case "string", "char", "empty"
 				out = """" & value & """"
 			
@@ -627,6 +632,34 @@ class JSON
 		
 		serializeValue = out
 	end function
+	
+	private function padZero(byval number, byval length)
+		dim result
+		result = number
+		
+		while len(result) < length
+			result = "0" & result
+		wend
+		
+		padZero = result
+	end function
+	
+	' By DavidRR: http://stackoverflow.com/a/13980554/1046610
+	' 
+	private Function GetTimeZoneOffset()
+		Const sComputer = "."
+
+		Dim oWmiService : Set oWmiService = _
+			GetObject("winmgmts:{impersonationLevel=impersonate}!\\" _
+					  & sComputer & "\root\cimv2")
+
+		Set cItems = oWmiService.ExecQuery("SELECT * FROM Win32_ComputerSystem")
+
+		For Each oItem In cItems
+			GetTimeZoneOffset = oItem.CurrentTimeZone / 60
+			Exit For
+		Next
+	End Function
 	
 	' Serializes an array or JSONarray object to JSON formatted string
 	public function serializeArray(byref arr)
