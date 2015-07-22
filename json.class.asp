@@ -1,5 +1,5 @@
 ﻿<%
-' JSON object class 2.2.1 - October, 10th - 2012
+' JSON object class 2.2.2 - October, 10th - 2012
 '
 ' Licence:
 ' The MIT License (MIT)
@@ -22,7 +22,7 @@
 
 class JSON
 	dim i_debug, i_depth, i_parent
-	dim i_properties
+	dim i_properties, i_version
 
 	' Set to true to show the internals of the parsing mecanism
 	public property get debug
@@ -64,6 +64,7 @@ class JSON
 
 	' Constructor and destructor
 	private sub class_initialize()
+		i_version = "2.2.2"
 		i_depth = 0
 		i_debug = false
 		set i_parent = nothing
@@ -480,7 +481,7 @@ class JSON
 	end sub
 	
 	' Return the value of a property by its key
-	public function value(byval prop)
+	public default function value(byval prop)
 		dim p
 		getProperty prop, p
 		
@@ -810,12 +811,17 @@ end class
 ' JSON array class
 ' Represents an array of JSON objects and values
 class JSONarray
-	dim i_items, i_depth, i_parent
+	dim i_items, i_depth, i_parent, i_version
+
+	' The class version
+	public property get version
+		items = i_version
+	end property	
 
 	' The actual array items
 	public property get items
 		items = i_items
-	end property	
+	end property
 	
 	public property let items(value)
 		if isArray(value) then
@@ -852,6 +858,7 @@ class JSONarray
 	
 	' Constructor and destructor
 	private sub class_initialize
+		i_version = "2.2.0"
 		redim i_items(-1)
 		depth = 0
 	end sub

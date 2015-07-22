@@ -26,12 +26,12 @@
 	server.ScriptTimeout = 10
 	dim jsonObj, jsonString, jsonArr
 	
-	testLoad = false
+	testLoad = true
 	testAdd = true
-	testValue = false
-	testChange = false
+	testValue = true
+	testChange = true
 	
-	testArrayPush = false
+	testArrayPush = true
 	
 	testLoadRecordset = true
 	
@@ -77,7 +77,7 @@
 	if testValue then
 		%><h3>Get the Values</h3><%
 		response.write "nome: " & jsonObj.value("nome") & "<br>"
-		response.write "idade: " & jsonObj.value("idade") & "<br>"
+		response.write "idade: " & jsonObj("idade") & "<br>"
 	end if
 	
 	
