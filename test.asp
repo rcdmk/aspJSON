@@ -27,7 +27,7 @@
 	dim jsonObj, jsonString, jsonArr
 	
 	testLoad = false
-	testAdd = false
+	testAdd = true
 	testValue = false
 	testChange = false
 	
@@ -52,7 +52,7 @@
 	
 	if testAdd then
 		dim arr, multArr, nestedObject
-		arr = Array(1, "teste", 234.56, "mais teste", "234")
+		arr = Array(1, "teste", 234.56, "mais teste", "234", now)
 		
 		redim multArr(1, 1)
 		multArr(0, 0) = "0,0"
