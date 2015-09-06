@@ -340,7 +340,7 @@ class JSON
 						' If it's a property of an object that is inside the array
 						' we add it to the object instead
 						if isObject(currentObject) then
-							if currentObject.depth = currentArray.depth + 1 then useArray = false
+							if currentObject.depth >= currentArray.depth + 1 then useArray = false
 						end if
 						
 						' else, we add it to the array
