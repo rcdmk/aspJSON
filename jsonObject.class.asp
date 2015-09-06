@@ -20,8 +20,13 @@
 ' WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ' SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-const JsonRootKey = "[[JSONroot]]"
-const JsonEpecialValues = "^(?:(?:t(?:r(?:ue?)?)?)|(?:f(?:a(?:l(?:se?)?)?)?)|(?:n(?:u(?:ll?)?))|(?:u(?:n(?:d(?:e(?:f(?:i(?:n(?:ed?)?)?)?)?)?)?)?))$"
+const JSON_ROOT_KEY = "[[JSONroot]]"
+const JSON_SPECIAL_VALUES_REGEX = "^(?:(?:t(?:r(?:ue?)?)?)|(?:f(?:a(?:l(?:se?)?)?)?)|(?:n(?:u(?:ll?)?))|(?:u(?:n(?:d(?:e(?:f(?:i(?:n(?:ed?)?)?)?)?)?)?)?))$"
+
+const JSON_ERROR_PARSE = 1
+const JSON_ERROR_PROPERTY_ALREADY_EXISTS = 2
+const JSON_ERROR_PROPERTY_DOES_NOT_EXISTS = 3
+const JSON_ERROR_NOT_AN_ARRAY = 4
 
 class JSONobject
 	dim i_debug, i_depth, i_parent
@@ -99,7 +104,7 @@ class JSONobject
 		size = len(strJson)
 		
 		' At least 2 chars to continue
-		if size < 2 then  exit function
+		if size < 2 then err.raise JSON_ERROR_PARSE, TypeName(me), "Invalid JSON string to parse"
 		
 		' Init the regex to be used in the loop
 		set regex = new regexp
@@ -109,7 +114,7 @@ class JSONobject
 		
 		' setup
 		set root = me
-		key = JsonRootKey
+		key = JSON_ROOT_KEY
 		mode = "init"
 		quoted = false
 		set currentObject = root
@@ -124,13 +129,13 @@ class JSONobject
 				log("Enter init")
 				
 				' if we are in root, empty the object
-				if key = JsonRootKey then redim i_properties(-1)
+				if key = JSON_ROOT_KEY then redim i_properties(-1)
 				
 				' Init object
 				if char = "{" then
 					log("Create object<ul>")
 
-					if key <> JsonRootKey or GetTypeName(root) = "JSONarray" then
+					if key <> JSON_ROOT_KEY or GetTypeName(root) = "JSONarray" then
 						' creates a new object
 						set item = new JSONobject
 						set item.parent = currentObject
@@ -170,7 +175,7 @@ class JSONobject
 					log("Create array<ul>")
 					
 					set item = new JSONarray
-					if key = JsonRootKey then set root = item
+					if key = JSON_ROOT_KEY then set root = item
 					
 					addedToArray = false					
 					
@@ -282,7 +287,7 @@ class JSONobject
 					end if
 				else
 					' possible boolean and null values
-					if regex.pattern <> JsonEpecialValues then regex.pattern = JsonEpecialValues
+					if regex.pattern <> JSON_SPECIAL_VALUES_REGEX then regex.pattern = JSON_SPECIAL_VALUES_REGEX
 					if regex.test(char) or regex.test(value) then
 						value = value & char
 						if value = "true" or value = "false" or value = "null" or value = "undefined" then mode = "addValue"
@@ -455,7 +460,7 @@ class JSONobject
 		getProperty prop, p
 		
 		if isObject(p) then
-			err.raise 1, "Property already exists", "A property already exists with the name: " & prop & "."
+			err.raise JSON_ERROR_PROPERTY_ALREADY_EXISTS, TypeName(me), "A property already exists with the name: " & prop & "."
 		else
 			dim item
 			set item = new JSONpair
@@ -492,7 +497,7 @@ class JSONobject
 				value = p.value
 			end if
 		else
-			err.raise 2, "Property doesn't exists", "Property " & prop & " doesn't exists in this object."
+			err.raise JSON_ERROR_PROPERTY_DOES_NOT_EXISTS, TypeName(me), "Property " & prop & " doesn't exists in this object."
 		end if
 	end function
 	
@@ -579,7 +584,7 @@ class JSONobject
 				value = prop.value
 			end if
 			
-			if prop.name = JsonRootKey then
+			if prop.name = JSON_ROOT_KEY then
 				out = out & """data"":"
 			else
 				out = out & """" & prop.name & """:"
@@ -832,7 +837,7 @@ class JSONarray
 		if isArray(value) then
 			i_items = value
 		else
-			err.raise 1, "The value assigned is not an array."
+			err.raise JSON_ERROR_NOT_AN_ARRAY, TypeName(me), "The value assigned is not an array."
 		end if
 	end property	
 	
