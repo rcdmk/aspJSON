@@ -1,7 +1,7 @@
 <%
 Option Explicit
 %>
-<!--#include file="json.class.asp" -->
+<!--#include file="jsonObject.class.asp" -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -37,11 +37,11 @@ Option Explicit
 	testValue = false
 	testChange = false
 	
-	testArrayPush = false
+	testArrayPush = true
 	
 	testLoadRecordset = false
 	
-	set jsonObj = new json
+	set jsonObj = new JSONobject
 	set jsonArr = new jsonArray
 	
 	jsonObj.debug = false
@@ -53,7 +53,7 @@ Option Explicit
 		
 		set outputObj = jsonObj.parse(jsonString)
 		%>
-		<h3>Input</h3>
+		<h3>Parse Input</h3>
 		<pre><%= jsonString %></pre>
 		<%
 	end if
@@ -66,15 +66,14 @@ Option Explicit
 		multArr(0, 0) = "0,0"
 		multArr(0, 1) = "0,1"
 		multArr(1, 0) = "1,0"
-		multArr(1, 1) = "1,1"
-		
+		multArr(1, 1) = "1,1"		
 		
 		jsonObj.add "nome", "Jozé"
 		jsonObj.add "idade", 25
 		jsonObj.add "lista", arr
 		jsonObj.add "lista2", multArr
 		
-		set nestedObject = new JSON
+		set nestedObject = new JSONobject
 		nestedObject.add "sub1", "value of sub1"
 		nestedObject.add "sub2", "value of sub2"
 		
@@ -85,7 +84,7 @@ Option Explicit
 	if testValue then
 		%><h3>Get Values</h3><%
 		response.write "nome: " & jsonObj.value("nome") & "<br>"
-		response.write "idade: " & jsonObj("idade") & "<br>"
+		response.write "idade: " & jsonObj("idade") & "<br>" ' short syntax
 	end if
 	
 	
@@ -157,16 +156,22 @@ Option Explicit
 		
 		set rs = nothing
 	end if	
-	%>
-	<h3>Parse Output</h3>
-	<pre><%= outputObj.write %></pre>	
 	
-	<h3>JSON Output (Same object: <% if typeName(jsonObj) = typeName(outputObj) then %>yes<% else %>no<% end if %>)</h3>
+	if testLoad then
+		%>
+		<h3>Parse Output</h3>
+		<pre><%= outputObj.write %></pre>	
+		<%
+	end if
+	%>
+	
+	<h3>JSON Object Output<% if testLoad then %> (Same object: <% if typeName(jsonObj) = typeName(outputObj) then %>yes<% else %>no<% end if %>)<% end if %></h3>
 	<pre><%= jsonObj.write %></pre>	
 	
 	<h3>Array Output</h3>
 	<pre><%= jsonArr.write %></pre>	
 	<%	
+	set outputObj = nothing
 	set jsonObj = nothing
 	set jsonArr = nothing
 	%>

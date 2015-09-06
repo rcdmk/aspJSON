@@ -20,10 +20,15 @@
 ' WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ' SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-const JsonRootKey = "[[root]]"
-const JsonEpecialValues = "^(?:(?:t(?:r(?:ue?)?)?)|(?:f(?:a(?:l(?:se?)?)?)?)|(?:n(?:u(?:ll?)?))|(?:u(?:n(?:d(?:e(?:f(?:i(?:n(?:ed?)?)?)?)?)?)?)?))$"
+const JSON_ROOT_KEY = "[[JSONroot]]"
+const JSON_SPECIAL_VALUES_REGEX = "^(?:(?:t(?:r(?:ue?)?)?)|(?:f(?:a(?:l(?:se?)?)?)?)|(?:n(?:u(?:ll?)?))|(?:u(?:n(?:d(?:e(?:f(?:i(?:n(?:ed?)?)?)?)?)?)?)?))$"
 
-class JSON
+const JSON_ERROR_PARSE = 1
+const JSON_ERROR_PROPERTY_ALREADY_EXISTS = 2
+const JSON_ERROR_PROPERTY_DOES_NOT_EXISTS = 3
+const JSON_ERROR_NOT_AN_ARRAY = 4
+
+class JSONobject
 	dim i_debug, i_depth, i_parent
 	dim i_properties, i_version
 
@@ -95,11 +100,10 @@ class JSON
 		
 		strJson = trim(strJson)
 		
-		i = 0
 		size = len(strJson)
 		
 		' At least 2 chars to continue
-		if size < 2 then  exit function
+		if size < 2 then err.raise JSON_ERROR_PARSE, TypeName(me), "Invalid JSON string to parse"
 		
 		' Init the regex to be used in the loop
 		set regex = new regexp
@@ -107,35 +111,33 @@ class JSON
 		regex.ignoreCase = true
 		regex.pattern = "\w"
 		
-		' setup
+		' setup initial values
+		i = 0
 		set root = me
-		key = JsonRootKey
+		key = JSON_ROOT_KEY
 		mode = "init"
 		quoted = false
-		set currentObject = me
+		set currentObject = root
 		
 		' main state machine
 		do while i < size
 			i = i + 1
 			char = mid(strJson, i, 1)
 			
-			' root or object begining
+			' root, object or array start
 			if mode = "init" then
 				log("Enter init")
 				
-				' if we are in root
-				if key = JsonRootKey then
-					' empty the object
-					redim i_properties(-1)
-				end if
+				' if we are in root, clear previous object properties
+				if key = JSON_ROOT_KEY and GetTypeName(currentArray) <> "JSONarray" then redim i_properties(-1)
 				
 				' Init object
 				if char = "{" then
 					log("Create object<ul>")
 					
-					if key <> JsonRootKey or GetTypeName(root) = "JSONarray" then
+					if key <> JSON_ROOT_KEY or GetTypeName(root) = "JSONarray" then
 						' creates a new object
-						set item = new JSON
+						set item = new JSONobject
 						set item.parent = currentObject
 						
 						addedToArray = false
@@ -173,7 +175,7 @@ class JSON
 					log("Create array<ul>")
 					
 					set item = new JSONarray
-					if key = JsonRootKey then set root = item
+					if key = JSON_ROOT_KEY then set root = item
 					
 					addedToArray = false					
 					
@@ -196,14 +198,11 @@ class JSON
 					
 					if not addedToArray then
 						set item.parent = currentObject
-						
 						currentObject.add key, item
-						
 						log("Added to parent object")
 					end if
 					
 					set currentArray = item
-					
 					openArray = openArray + 1
 					mode = "openValue"
 				end if
@@ -287,7 +286,7 @@ class JSON
 					end if
 				else
 					' possible boolean and null values
-					if regex.pattern <> JsonEpecialValues then regex.pattern = JsonEpecialValues
+					if regex.pattern <> JSON_SPECIAL_VALUES_REGEX then regex.pattern = JSON_SPECIAL_VALUES_REGEX
 					if regex.test(char) or regex.test(value) then
 						value = value & char
 						if value = "true" or value = "false" or value = "null" or value = "undefined" then mode = "addValue"
@@ -393,11 +392,11 @@ class JSON
 							set currentArray = currentArray.parent
 						
 						' if the parent is an object
-						elseif GetTypeName(currentArray.parent) = "JSON" then
+						elseif GetTypeName(currentArray.parent) = "JSONobject" then
 							set tmpObj = currentArray.parent
 							
 							' we search for the next parent array to set the current array
-							while isObject(tmpObj) and GetTypeName(tmpObj) = "JSON"
+							while isObject(tmpObj) and GetTypeName(tmpObj) = "JSONobject"
 								if isObject(tmpObj.parent) then
 									set tmpObj = tmpObj.parent
 								else
@@ -420,7 +419,7 @@ class JSON
 					
 					' If it's an open object, we close it and set the current object as it's parent
 					if isobject(currentObject.parent) then
-						if GetTypeName(currentObject.parent) = "JSON" then
+						if GetTypeName(currentObject.parent) = "JSONobject" then
 							set currentObject = currentObject.parent
 						
 						' If the parent is and array
@@ -460,7 +459,7 @@ class JSON
 		getProperty prop, p
 		
 		if isObject(p) then
-			err.raise 1, "Property already exists", "A property already exists with the name: " & prop & "."
+			err.raise JSON_ERROR_PROPERTY_ALREADY_EXISTS, TypeName(me), "A property already exists with the name: " & prop & "."
 		else
 			dim item
 			set item = new JSONpair
@@ -471,6 +470,8 @@ class JSON
 				dim item2
 				set item2 = new JSONarray
 				item2.items = obj
+				set item2.parent = me
+
 				set item.value = item2
 				
 			elseif isObject(obj) then
@@ -495,7 +496,7 @@ class JSON
 				value = p.value
 			end if
 		else
-			err.raise 2, "Property doesn't exists", "Property " & prop & " doesn't exists in this object."
+			err.raise JSON_ERROR_PROPERTY_DOES_NOT_EXISTS, TypeName(me), "Property " & prop & " doesn't exists in this object."
 		end if
 	end function
 	
@@ -509,7 +510,7 @@ class JSON
 			if isArray(obj) then
 				set item = new JSONarray
 				item.items = obj
-				item.parent = me
+				set item.parent = me
 				
 				p.value = item
 				
@@ -582,7 +583,7 @@ class JSON
 				value = prop.value
 			end if
 			
-			if prop.name = JsonRootKey then
+			if prop.name = JSON_ROOT_KEY then
 				out = out & """data"":"
 			else
 				out = out & """" & prop.name & """:"
@@ -641,6 +642,7 @@ class JSON
 		serializeValue = out
 	end function
 	
+	' Pads a numeric string with zeros at left
 	private function padZero(byval number, byval length)
 		dim result
 		result = number
@@ -708,7 +710,7 @@ class JSON
 				end if
 								
 				if isobject(elm) then
-					if GetTypeName(elm) = "JSON" then
+					if GetTypeName(elm) = "JSONobject" then
 						set val = elm
 					
 					elseif GetTypeName(elm) = "JSONarray" then
@@ -778,7 +780,7 @@ class JSON
 		set arr = new JSONArray	
 		
 		while not rs.eof
-			set obj = new JSON
+			set obj = new JSONobject
 		
 			for each field in rs.fields
 				obj.Add field.name, field.value
@@ -835,7 +837,7 @@ class JSONarray
 		if isArray(value) then
 			i_items = value
 		else
-			err.raise 1, "The value assigned is not an array."
+			err.raise JSON_ERROR_NOT_AN_ARRAY, TypeName(me), "The value assigned is not an array."
 		end if
 	end property	
 	
@@ -864,7 +866,7 @@ class JSONarray
 	private sub class_initialize
 		i_version = "2.2.1"
 		redim i_items(-1)
-		depth = 0
+		i_depth = 0
 	end sub
 	
 	private sub class_terminate
@@ -881,7 +883,7 @@ class JSONarray
 		if not isEmpty(i_parent) then
 			set js = i_parent
 		else
-			set js = new JSON
+			set js = new JSONobject
 			instantiated = true
 		end if
 		
@@ -895,7 +897,7 @@ class JSONarray
 		dim obj, field
 		
 		while not rs.eof
-			set obj = new JSON
+			set obj = new JSONobject
 		
 			for each field in rs.fields
 				obj.Add field.name, field.value
@@ -906,20 +908,20 @@ class JSONarray
 			rs.movenext
 		wend
 		
-		'set obj = nothing
+		set obj = nothing
 	end sub
 	
 	' Serializes this JSONarray object in JSON formatted string value
-	' (uses the JSON.SerializeArray method)
+	' (uses the JSONobject.SerializeArray method)
 	public function Serialize()
 		dim js, out, instantiated
 		
 		if not isEmpty(i_parent) then
-			if TypeName(i_parent) = "JSON" then set js = i_parent
+			if TypeName(i_parent) = "JSONobject" then set js = i_parent
 		end if
 		
 		if isEmpty(js) then
-			set js = new JSON
+			set js = new JSONobject
 			instantiated = true
 		end if
 		
