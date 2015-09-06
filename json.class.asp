@@ -21,7 +21,7 @@
 ' SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 const JsonRootKey = "[[root]]"
-
+const JsonEpecialValues = "^(?:(?:t(?:r(?:ue?)?)?)|(?:f(?:a(?:l(?:se?)?)?)?)|(?:n(?:u(?:ll?)?))|(?:u(?:n(?:d(?:e(?:f(?:i(?:n(?:ed?)?)?)?)?)?)?)?))$"
 
 class JSON
 	dim i_debug, i_depth, i_parent
@@ -40,10 +40,6 @@ class JSON
 	' The depth of the object in the chain, starting with 1
 	public property get depth
 		depth = i_depth
-	end property
-	
-	private property let depth(value)
-		i_depth = value
 	end property
 	
 	
@@ -146,7 +142,7 @@ class JSON
 						
 						' Object is inside an array
 						if GetTypeName(currentArray) = "JSONarray" then
-							if currentArray.depth >= currentObject.depth then
+							if currentArray.depth > currentObject.depth then
 								' Add it to the array
 								set item.parent = currentArray
 								tmpArray = currentArray.items
@@ -183,7 +179,7 @@ class JSON
 					
 					' Array is inside an array
 					if isobject(currentArray) and openArray > 0 then
-						if currentArray.depth >= currentObject.depth then
+						if currentArray.depth > currentObject.depth then
 							' Add it to the array
 							set item.parent = currentArray
 							tmpArray = currentArray.items
@@ -193,6 +189,8 @@ class JSON
 							currentArray.items = tmpArray
 							
 							addedToArray = true
+							
+							log("Added to parent array")
 						end if
 					end if
 					
@@ -200,6 +198,8 @@ class JSON
 						set item.parent = currentObject
 						
 						currentObject.add key, item
+						
+						log("Added to parent object")
 					end if
 					
 					set currentArray = item
@@ -248,14 +248,14 @@ class JSON
 					log("Open array value")
 					quoted = false
 					mode = "init"
-					i = i - 1
+					i = i - 1 ' we backup one char to init with '['
 				
 				' If it begins with open a bracket ({), its an object
 				elseif char = "{" then
 					log("Open object value")
 					quoted = false
 					mode = "init"
-					i = i - 1
+					i = i - 1 ' we backup one char to init with '{'
 					
 				else
 					' If its a number, start a numeric value
@@ -265,6 +265,8 @@ class JSON
 						quoted = false
 						value = char
 						mode = "closeValue"
+						
+					' special values: null, true, false and undefined
 					elseif char = "n" or char = "t" or char = "f" or char = "u" then
 						log("Open special value")
 						quoted = false
@@ -285,7 +287,7 @@ class JSON
 					end if
 				else
 					' possible boolean and null values
-					if regex.pattern <> "^(?:(?:t(?:r(?:ue?)?)?)|(?:f(?:a(?:l(?:se?)?)?)?)|(?:n(?:u(?:ll?)?))|(?:u(?:n(?:d(?:e(?:f(?:i(?:n(?:ed?)?)?)?)?)?)?)?))$" then regex.pattern = "^(?:(?:t(?:r(?:ue?)?)?)|(?:f(?:a(?:l(?:se?)?)?)?)|(?:n(?:u(?:ll?)?))|(?:u(?:n(?:d(?:e(?:f(?:i(?:n(?:ed?)?)?)?)?)?)?)?))$"
+					if regex.pattern <> JsonEpecialValues then regex.pattern = JsonEpecialValues
 					if regex.test(char) or regex.test(value) then
 						value = value & char
 						if value = "true" or value = "false" or value = "null" or value = "undefined" then mode = "addValue"
@@ -338,9 +340,7 @@ class JSON
 						' If it's a property of an object that is inside the array
 						' we add it to the object instead
 						if isObject(currentObject) then
-							if isObject(currentObject.parent) then
-								if GetTypeName(currentObject.parent) = "JSONarray" then useArray = false
-							end if
+							if currentObject.depth = currentArray.depth + 1 then useArray = false
 						end if
 						
 						' else, we add it to the array
@@ -370,7 +370,7 @@ class JSON
 					if openArray > 0 and isObject(currentArray) then
 						' and the current object is a parent or sibling object
 						if currentArray.depth >= currentObject.depth then
-							' start a value
+							' start an array value
 							log("New value")
 							mode = "openValue"
 						else
@@ -397,7 +397,7 @@ class JSON
 							set tmpObj = currentArray.parent
 							
 							' we search for the next parent array to set the current array
-							while GetTypeName(tmpObj) = "JSON" and isObject(tmpObj)
+							while isObject(tmpObj) and GetTypeName(tmpObj) = "JSON"
 								if isObject(tmpObj.parent) then
 									set tmpObj = tmpObj.parent
 								else
@@ -428,7 +428,7 @@ class JSON
 							set tmpObj = currentObject.parent
 							
 							' we search for the next parent object to set the current object
-							while GetTypeName(tmpObj) = "JSONarray" and isObject(tmpObj)
+							while isObject(tmpObj) and GetTypeName(tmpObj) = "JSONarray"
 								set tmpObj = tmpObj.parent
 							wend
 							
@@ -658,11 +658,12 @@ class JSON
 		Const sComputer = "."
 
 		Dim oWmiService : Set oWmiService = _
-			GetObject("winmgmts:{impersonationLevel=impersonate}!\\" _
-					  & sComputer & "\root\cimv2")
+			GetObject("winmgmts:{impersonationLevel=impersonate}!\\" & sComputer & "\root\cimv2")
 
-		Set cItems = oWmiService.ExecQuery("SELECT * FROM Win32_ComputerSystem")
+		Dim cItems : Set cItems = oWmiService.ExecQuery("SELECT * FROM Win32_ComputerSystem")
 
+		Dim oItem
+		
 		For Each oItem In cItems
 			GetTimeZoneOffset = oItem.CurrentTimeZone / 60
 			Exit For
@@ -848,10 +849,6 @@ class JSONarray
 		depth = i_depth
 	end property
 	
-	private property let depth(value)
-		i_depth = value
-	end property
-	
 	' The parent object or array
 	public property get parent
 		set parent = i_parent
@@ -918,8 +915,10 @@ class JSONarray
 		dim js, out, instantiated
 		
 		if not isEmpty(i_parent) then
-			set js = i_parent
-		else
+			if TypeName(i_parent) = "JSON" then set js = i_parent
+		end if
+		
+		if isEmpty(js) then
 			set js = new JSON
 			instantiated = true
 		end if
