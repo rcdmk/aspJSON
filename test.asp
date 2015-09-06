@@ -84,7 +84,7 @@ Option Explicit
 	if testValue then
 		%><h3>Get Values</h3><%
 		response.write "nome: " & jsonObj.value("nome") & "<br>"
-		response.write "idade: " & jsonObj("idade") & "<br>"
+		response.write "idade: " & jsonObj("idade") & "<br>" ' short syntax
 	end if
 	
 	
