@@ -1,4 +1,4 @@
-#JSON object class 2.2.1
+#JSON object class 2.2.2
 ##By RCDMK - rcdmk[at]hotmail[dot]com
 
 ###Licence:
@@ -31,8 +31,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 	' get the values
 	Response.Write oJSON.Value("prop1") & "<br>"
 	Response.Write oJSON.Value("prop2") & "<br>"
-	Response.Write oJSON.Value("prop3") & "<br>"
-	Response.Write oJSON.Value("prop4") & "<br>"
+	Response.Write oJSON("prop3") & "<br>" ' default function is equivalent to `.Value(propName)`
+	Response.Write oJSON("prop4") & "<br>"
 	
 	' get the JSON formatted output
 	Dim jsonSting
