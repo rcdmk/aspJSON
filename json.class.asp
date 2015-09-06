@@ -1,5 +1,5 @@
 ﻿<%
-' JSON object class 2.2.2 - October, 10th - 2012
+' JSON object class 2.2.3 - October, 10th - 2012
 '
 ' Licence:
 ' The MIT License (MIT)
@@ -63,7 +63,7 @@ class JSON
 
 	' Constructor and destructor
 	private sub class_initialize()
-		i_version = "2.2.2"
+		i_version = "2.2.3"
 		i_depth = 0
 		i_debug = false
 		set i_parent = nothing
@@ -862,7 +862,7 @@ class JSONarray
 	
 	' Constructor and destructor
 	private sub class_initialize
-		i_version = "2.2.0"
+		i_version = "2.2.1"
 		redim i_items(-1)
 		depth = 0
 	end sub
