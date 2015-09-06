@@ -20,6 +20,9 @@
 ' WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ' SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+const JsonRootKey = "[[root]]"
+
+
 class JSON
 	dim i_debug, i_depth, i_parent
 	dim i_properties, i_version
@@ -110,7 +113,7 @@ class JSON
 		
 		' setup
 		set root = me
-		key = "[[root]]"
+		key = JsonRootKey
 		mode = "init"
 		quoted = false
 		set currentObject = me
@@ -125,7 +128,7 @@ class JSON
 				log("Enter init")
 				
 				' if we are in root
-				if key = "[[root]]" then
+				if key = JsonRootKey then
 					' empty the object
 					redim i_properties(-1)
 				end if
@@ -134,7 +137,7 @@ class JSON
 				if char = "{" then
 					log("Create object<ul>")
 					
-					if key <> "[[root]]" or GetTypeName(root) = "JSONarray" then
+					if key <> JsonRootKey or GetTypeName(root) = "JSONarray" then
 						' creates a new object
 						set item = new JSON
 						set item.parent = currentObject
@@ -174,7 +177,7 @@ class JSON
 					log("Create array<ul>")
 					
 					set item = new JSONarray
-					if key = "[[root]]" then set root = item
+					if key = JsonRootKey then set root = item
 					
 					addedToArray = false					
 					
@@ -492,7 +495,7 @@ class JSON
 				value = p.value
 			end if
 		else
-			err.raise 2, "Property doesn't exists", "Property " & prop & " doesn't exists."
+			err.raise 2, "Property doesn't exists", "Property " & prop & " doesn't exists in this object."
 		end if
 	end function
 	
@@ -579,7 +582,11 @@ class JSON
 				value = prop.value
 			end if
 			
-			out = out & """" & prop.name & """:"
+			if prop.name = JsonRootKey then
+				out = out & """data"":"
+			else
+				out = out & """" & prop.name & """:"
+			end if
 			
 			if isArray(value) or GetTypeName(value) = "JSONarray" then
 				out = out & serializeArray(value)
