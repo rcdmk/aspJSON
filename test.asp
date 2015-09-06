@@ -1,3 +1,6 @@
+<%
+Option Explicit
+%>
 <!--#include file="json.class.asp" -->
 <!DOCTYPE html>
 <html>
@@ -26,15 +29,17 @@
 	server.ScriptTimeout = 10
 	dim jsonObj, jsonString, jsonArr, outputObj
 	dim testLoad, testAdd, testValue, testChange, testArrayPush, testLoadRecordset
+	dim testLoadArray
 	
 	testLoad = true
-	testAdd = true
-	testValue = true
-	testChange = true
+	testLoadArray = true
+	testAdd = false
+	testValue = false
+	testChange = false
 	
-	testArrayPush = true
+	testArrayPush = false
 	
-	testLoadRecordset = true
+	testLoadRecordset = false
 	
 	set jsonObj = new json
 	set jsonArr = new jsonArray
@@ -42,7 +47,9 @@
 	jsonObj.debug = false
 	
 	if testLoad then
-		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] } }"
+		'jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] } }"
+		
+		if testLoadArray then jsonString = "[" & jsonString & "]"
 		
 		set outputObj = jsonObj.parse(jsonString)
 		%>
@@ -151,11 +158,11 @@
 		set rs = nothing
 	end if	
 	%>
-	<h3>Original Output</h3>
-	<pre><%= jsonObj.write %></pre>	
-	
-	<h3>Parse Output (Same object: <% if typeName(jsonObj) = typeName(outputObj) then %>yes<% else %>no<% end if %>)</h3>
+	<h3>Parse Output</h3>
 	<pre><%= outputObj.write %></pre>	
+	
+	<h3>JSON Output (Same object: <% if typeName(jsonObj) = typeName(outputObj) then %>yes<% else %>no<% end if %>)</h3>
+	<pre><%= jsonObj.write %></pre>	
 	
 	<h3>Array Output</h3>
 	<pre><%= jsonArr.write %></pre>	
