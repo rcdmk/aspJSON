@@ -25,6 +25,7 @@ Option Explicit
 	</style>
 </head>
 <body>
+	<h1>JSON Object and Array Tests</h1>
 	<%
 	server.ScriptTimeout = 10
 	dim jsonObj, jsonString, jsonArr, outputObj
@@ -165,7 +166,7 @@ Option Explicit
 	end if
 	%>
 	
-	<h3>JSON Object Output<% if testLoad then %> (Same object: <% if typeName(jsonObj) = typeName(outputObj) then %>yes<% else %>no<% end if %>)<% end if %></h3>
+	<h3>JSON Object Output<% if testLoad then %> (Same as parse output: <% if typeName(jsonObj) = typeName(outputObj) then %>yes<% else %>no<% end if %>)<% end if %></h3>
 	<pre><%= jsonObj.write %></pre>	
 	
 	<h3>Array Output</h3>
