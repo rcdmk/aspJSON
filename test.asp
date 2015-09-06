@@ -1,7 +1,7 @@
 <%
 Option Explicit
 %>
-<!--#include file="json.class.asp" -->
+<!--#include file="jsonObject.class.asp" -->
 <!DOCTYPE html>
 <html>
 <head>
