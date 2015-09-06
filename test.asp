@@ -24,7 +24,8 @@
 <body>
 	<%
 	server.ScriptTimeout = 10
-	dim jsonObj, jsonString, jsonArr
+	dim jsonObj, jsonString, jsonArr, outputObj
+	dim testLoad, testAdd, testValue, testChange, testArrayPush, testLoadRecordset
 	
 	testLoad = true
 	testAdd = true
@@ -43,7 +44,7 @@
 	if testLoad then
 		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] } }"
 		
-		jsonObj.parse jsonString
+		set outputObj = jsonObj.parse(jsonString)
 		%>
 		<h3>Input</h3>
 		<pre><%= jsonString %></pre>
@@ -75,14 +76,14 @@
 	
 	
 	if testValue then
-		%><h3>Get the Values</h3><%
+		%><h3>Get Values</h3><%
 		response.write "nome: " & jsonObj.value("nome") & "<br>"
 		response.write "idade: " & jsonObj("idade") & "<br>"
 	end if
 	
 	
 	if testChange then
-		%><h3>Change the Values</h3><%
+		%><h3>Change Values</h3><%
 		
 		response.write "nome before: " & jsonObj.value("nome") & "<br>"
 		
@@ -99,7 +100,7 @@
 		jsonArr.Push jsonObj
 		jsonArr.Push 1
 		jsonArr.Push "strings too"
-	end if	
+	end if
 	
 	if testLoadRecordset then
 		%><h3>Load a Recordset</h3>
@@ -150,8 +151,11 @@
 		set rs = nothing
 	end if	
 	%>
-	<h3>Output</h3>
+	<h3>Original Output</h3>
 	<pre><%= jsonObj.write %></pre>	
+	
+	<h3>Parse Output (Same object: <% if typeName(jsonObj) = typeName(outputObj) then %>yes<% else %>no<% end if %>)</h3>
+	<pre><%= outputObj.write %></pre>	
 	
 	<h3>Array Output</h3>
 	<pre><%= jsonArr.write %></pre>	
