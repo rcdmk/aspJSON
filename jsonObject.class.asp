@@ -236,8 +236,15 @@ class JSONobject
 			elseif mode = "openValue" then
 				value = ""
 
+				' If the next char is a closing square barcket (]), its closing an empty array
+				if char = "]" then
+					log("Closing empty array")
+					quoted = false
+					mode = "next"
+					i = i - 1 ' we backup one char to make the next iteration get the closing bracket
+				
 				' If it begins with a double quote, its a string value
-				if char = """" then
+				elseif char = """" then
 					log("Open string value")
 					quoted = true
 					mode = "closeValue"
