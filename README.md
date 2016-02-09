@@ -92,3 +92,39 @@ If you want to use arrays, I have something for you too
 	' write to page
 	JSONarr.Write() ' Gess what? This does the same as the Write method from JSON object
 	
+	
+To loop arrays you have to access the `items` property of the `JSONarray` object:
+
+	dim i, items, item
+	
+	items = JSONarr.items ' needed because VB doesn't allow to access properties by index
+
+	' more readable loop
+	for each item in JSONarr.items
+		if isObject(item) and typeName(item) = "JSONobject" then
+			item.write()
+		else
+			response.write item
+		end if
+		
+		response.write "<br>"
+	next
+
+	
+	' faster but less readable
+	for i = 0 to ubound(JSONarr.items)
+		if isObject(items(i)) then
+			set item = items(i)
+			
+			if typeName(item) = "JSONobject" then
+				item.write()
+			else
+				response.write item
+			end if
+		else
+			item = items(i)
+			response.write item
+		end if
+		
+		response.write "<br>"
+	next

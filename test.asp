@@ -34,8 +34,8 @@ Option Explicit
 	
 	testLoad = true
 	testLoadArray = true
-	testAdd = false
-	testValue = false
+	testAdd = true
+	testValue = true
 	testChange = false
 	
 	testArrayPush = true
@@ -86,6 +86,7 @@ Option Explicit
 		%><h3>Get Values</h3><%
 		response.write "nome: " & jsonObj.value("nome") & "<br>"
 		response.write "idade: " & jsonObj("idade") & "<br>" ' short syntax
+		response.write "non existant property:" & jsonObj("aNonExistantPropertyName") & "(" & typeName(jsonObj("aNonExistantPropertyName")) & ")<br>"
 	end if
 	
 	
@@ -170,11 +171,60 @@ Option Explicit
 	<pre><%= jsonObj.write %></pre>	
 	
 	<h3>Array Output</h3>
-	<pre><%= jsonArr.write %></pre>	
-	<%	
+	<pre><%= jsonArr.write %></pre>
+	
+	<h3>Array Loop</h3>
+	<pre><%
+	dim i, items, item
+	
+	items = jsonArr.items ' needed because VB doesn't allow to access properties by index
+	
+	' more readable loop
+	i = 0
+	response.write "For Each Loop (readability):<br>==============<br>"
+	
+	for each item in jsonArr.items
+		response.write "Index "
+		response.write i
+		response.write ": "
+	
+		if isObject(item) and typeName(item) = "JSONobject" then
+			item.write()
+		else
+			response.write item
+		end if
+		
+		response.write "<br>"
+		i = i + 1
+	next
+	
+	response.write "<br><br>For Loop (speed):<br>=========<br>"
+	
+	' faster but less readable
+	for i = 0 to ubound(jsonArr.items)
+		response.write "Index "
+		response.write i
+		response.write ": "
+	
+		if isObject(items(i)) then
+			set item = items(i)
+			
+			if typeName(item) = "JSONobject" then
+				item.write()
+			else
+				response.write item
+			end if
+		else
+			item = items(i)
+			response.write item
+		end if
+		
+		response.write "<br>"
+	next
+	
 	set outputObj = nothing
 	set jsonObj = nothing
 	set jsonArr = nothing
-	%>
+	%></pre>
 </body>
 </html>

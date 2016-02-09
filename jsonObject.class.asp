@@ -25,7 +25,7 @@ const JSON_SPECIAL_VALUES_REGEX = "^(?:(?:t(?:r(?:ue?)?)?)|(?:f(?:a(?:l(?:se?)?)
 
 const JSON_ERROR_PARSE = 1
 const JSON_ERROR_PROPERTY_ALREADY_EXISTS = 2
-const JSON_ERROR_PROPERTY_DOES_NOT_EXISTS = 3
+const JSON_ERROR_PROPERTY_DOES_NOT_EXISTS = 3 ' DEPRECATED
 const JSON_ERROR_NOT_AN_ARRAY = 4
 
 class JSONobject
@@ -503,7 +503,7 @@ class JSONobject
 				value = p.value
 			end if
 		else
-			err.raise JSON_ERROR_PROPERTY_DOES_NOT_EXISTS, TypeName(me), "Property " & prop & " doesn't exists in this object."
+			value = null
 		end if
 	end function
 	
