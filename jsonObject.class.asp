@@ -1,9 +1,9 @@
 ﻿<%
-' JSON object class 3.0.1 - September, 6th - 2015
+' JSON object class 3.1.0 - February, 9th - 2016
 '
 ' Licence:
 ' The MIT License (MIT)
-' Copyright (c) 2015 RCDMK - rcdmk[at]hotmail[dot]com
+' Copyright (c) 2016 RCDMK - rcdmk[at]hotmail[dot]com
 ' 
 ' Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ' associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -68,7 +68,7 @@ class JSONobject
 
 	' Constructor and destructor
 	private sub class_initialize()
-		i_version = "3.0.1"
+		i_version = "3.1.0"
 		i_depth = 0
 		i_debug = false
 		set i_parent = nothing
