@@ -33,8 +33,8 @@ Option Explicit
 	
 	testLoad = true
 	testLoadArray = true
-	testAdd = false
-	testValue = false
+	testAdd = true
+	testValue = true
 	testChange = false
 	
 	testArrayPush = true
@@ -85,6 +85,7 @@ Option Explicit
 		%><h3>Get Values</h3><%
 		response.write "nome: " & jsonObj.value("nome") & "<br>"
 		response.write "idade: " & jsonObj("idade") & "<br>" ' short syntax
+		response.write "non existant property:" & jsonObj("aNonExistantPropertyName") & "(" & typeName(jsonObj("aNonExistantPropertyName")) & ")<br>"
 	end if
 	
 	
