@@ -21,6 +21,7 @@
 ' SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 const JSON_ROOT_KEY = "[[JSONroot]]"
+const JSON_DEFAULT_PROPERTY_NAME = "data"
 const JSON_SPECIAL_VALUES_REGEX = "^(?:(?:t(?:r(?:ue?)?)?)|(?:f(?:a(?:l(?:se?)?)?)?)|(?:n(?:u(?:ll?)?))|(?:u(?:n(?:d(?:e(?:f(?:i(?:n(?:ed?)?)?)?)?)?)?)?))$"
 
 const JSON_ERROR_PARSE = 1
@@ -30,7 +31,7 @@ const JSON_ERROR_NOT_AN_ARRAY = 4
 
 class JSONobject
 	dim i_debug, i_depth, i_parent
-	dim i_properties, i_version
+	dim i_properties, i_version, i_defaultPropertyName
 
 	' Set to true to show the internals of the parsing mecanism
 	public property get debug
@@ -39,6 +40,16 @@ class JSONobject
 
 	public property let debug(value)
 		i_debug = value
+	end property
+
+	
+	' Gets/sets the default property name generated when loading recordsets and arrays (default "data")
+	public property get defaultPropertyName
+		defaultPropertyName = i_defaultPropertyName
+	end property
+
+	public property let defaultPropertyName(value)
+		i_defaultPropertyName = value
 	end property
 
 
@@ -71,6 +82,8 @@ class JSONobject
 		i_version = "2.2.2"
 		i_depth = 0
 		i_debug = false
+		i_defaultPropertyName = JSON_DEFAULT_PROPERTY_NAME
+		
 		set i_parent = nothing
 		redim i_properties(-1)
 	end sub
@@ -591,7 +604,7 @@ class JSONobject
 			end if
 
 			if prop.name = JSON_ROOT_KEY then
-				out = out & """data"":"
+				out = out & """" & i_defaultPropertyName & """:"
 			else
 				out = out & """" & prop.name & """:"
 			end if
@@ -800,7 +813,7 @@ class JSONobject
 
 		set obj = nothing
 
-		add "data", arr
+		add i_defaultPropertyName, arr
 	end sub
 
 	' returns the value's type name
@@ -828,7 +841,7 @@ end class
 ' JSON array class
 ' Represents an array of JSON objects and values
 class JSONarray
-	dim i_items, i_depth, i_parent, i_version
+	dim i_items, i_depth, i_parent, i_version, i_defaultPropertyName
 
 	' The class version
 	public property get version
@@ -866,12 +879,23 @@ class JSONarray
 	public property set parent(value)
 		set i_parent = value
 		i_depth = i_parent.depth + 1
+		i_defaultPropertyName = i_parent.defaultPropertyName
+	end property
+	
+	' Gets/sets the default property name generated when loading recordsets and arrays (default "data")
+	public property get defaultPropertyName
+		defaultPropertyName = i_defaultPropertyName
+	end property
+
+	public property let defaultPropertyName(value)
+		i_defaultPropertyName = value
 	end property
 
 
 	' Constructor and destructor
 	private sub class_initialize
 		i_version = "2.2.0"
+		i_defaultPropertyName = JSON_DEFAULT_PROPERTY_NAME
 		redim i_items(-1)
 		i_depth = 0
 	end sub
@@ -889,8 +913,10 @@ class JSONarray
 
 		if not isEmpty(i_parent) then
 			set js = i_parent
+			i_defaultPropertyName = i_parent.defaultPropertyName
 		else
 			set js = new JSONobject
+			js.defaultPropertyName = i_defaultPropertyName
 			instantiated = true
 		end if
 
@@ -924,11 +950,15 @@ class JSONarray
 		dim js, out, instantiated
 
 		if not isEmpty(i_parent) then
-			if TypeName(i_parent) = "JSONobject" then set js = i_parent
+			if TypeName(i_parent) = "JSONobject" then
+				set js = i_parent
+				i_defaultPropertyName = i_parent.defaultPropertyName
+			end if
 		end if
 
 		if isEmpty(js) then
 			set js = new JSONobject
+			js.defaultPropertyName = i_defaultPropertyName
 			instantiated = true
 		end if
 

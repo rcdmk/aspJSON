@@ -29,7 +29,7 @@ Option Explicit
 	server.ScriptTimeout = 10
 	dim jsonObj, jsonString, jsonArr, outputObj
 	dim testLoad, testAdd, testValue, testChange, testArrayPush, testLoadRecordset
-	dim testLoadArray
+	dim testLoadArray, testChangeDefaultPropertyName
 	
 	testLoad = true
 	testLoadArray = true
@@ -40,6 +40,8 @@ Option Explicit
 	testArrayPush = true
 	
 	testLoadRecordset = false
+	
+	testChangeDefaultPropertyName = true
 	
 	set jsonObj = new JSONobject
 	set jsonArr = new jsonArray
@@ -163,6 +165,11 @@ Option Explicit
 		<h3>Parse Output</h3>
 		<pre><%= outputObj.write %></pre>	
 		<%
+	end if
+	
+	if testChangeDefaultPropertyName then
+		jsonObj.defaultPropertyName = "CustomName"
+		jsonArr.defaultPropertyName = "CustomArrName"
 	end if
 	%>
 	
