@@ -1,5 +1,5 @@
 ﻿<%
-' JSON object class 3.1.0 - February, 9th - 2016
+' JSON object class 3.1.1 - March, 15th - 2016
 '
 ' Licence:
 ' The MIT License (MIT)
@@ -79,7 +79,7 @@ class JSONobject
 
 	' Constructor and destructor
 	private sub class_initialize()
-		i_version = "3.1.0"
+		i_version = "3.1.1"
 		i_depth = 0
 		i_debug = false
 		i_defaultPropertyName = JSON_DEFAULT_PROPERTY_NAME
@@ -894,7 +894,7 @@ class JSONarray
 
 	' Constructor and destructor
 	private sub class_initialize
-		i_version = "2.2.1"
+		i_version = "2.2.2"
 		i_defaultPropertyName = JSON_DEFAULT_PROPERTY_NAME
 		redim i_items(-1)
 		i_depth = 0

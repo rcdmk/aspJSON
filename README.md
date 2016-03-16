@@ -1,4 +1,4 @@
-#JSON object class 3.1.0
+#JSON object class 3.1.1
 ##By RCDMK - rcdmk[at]hotmail[dot]com
 
 ###Licence:
@@ -78,6 +78,12 @@ To load records from a database:
 	JSON.Write() 		' outputs: {"data":[{"id":1,"nome":"nome 1","valor":10.99},{"id":2,"nome":"nome 2","valor":19.1}]}
 	JSONarr.Write() 	' outputs: [{"id":1,"nome":"nome 1","valor":10.99},{"id":2,"nome":"nome 2","valor":19.1}]
 	
+	
+To change the default property name ("data") when loading arrays and recordsets, use the `defaultPropertyName` property:
+	
+	JSON.defaultPropertyName = "CustomName"
+	JSON.Write() 		' outputs: {"CustomName":[{"id":1,"nome":"nome 1","valor":10.99},{"id":2,"nome":"nome 2","valor":19.1}]}
+
 	
 If you want to use arrays, I have something for you too
 
