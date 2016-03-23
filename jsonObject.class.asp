@@ -949,7 +949,10 @@ class JSONarray
 	' Returns the item at the specified index
 	' @param index as int - the desired item index
 	public default function ItemAt(byval index)
-		if me.length > 0 and index < me.length then
+		dim len
+		len = me.length
+		
+		if len > 0 and index < len then
 			if isObject(i_items(index)) then
 				set ItemAt = i_items(index)
 			else
