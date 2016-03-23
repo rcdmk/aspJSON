@@ -28,6 +28,7 @@ const JSON_ERROR_PARSE = 1
 const JSON_ERROR_PROPERTY_ALREADY_EXISTS = 2
 const JSON_ERROR_PROPERTY_DOES_NOT_EXISTS = 3 ' DEPRECATED
 const JSON_ERROR_NOT_AN_ARRAY = 4
+const JSON_ERROR_INDEX_OUT_OF_BOUNDS = 9 ' Numbered to have the same error number as the default "Subscript out of range" exeption
 
 class JSONobject
 	dim i_debug, i_depth, i_parent
@@ -793,7 +794,8 @@ class JSONobject
 		ArrayPush = arr
 	end function
 	
-	' Load properties from a ADO RecordSet object
+	' Load properties from an ADO RecordSet object into an array
+	' @param rs as ADODB.RecordSet
 	public sub LoadRecordSet(byref rs)
 		dim arr, obj, field
 		
@@ -814,6 +816,16 @@ class JSONobject
 		set obj = nothing
 		
 		add i_defaultPropertyName, arr
+	end sub
+	
+	' Load properties from the first record of an ADO RecordSet object
+	' @param rs as ADODB.RecordSet
+	public sub LoadFirstRecord(byref rs)
+		dim field
+		
+		for each field in rs.fields
+			add field.name, field.value
+		next
 	end sub
 	
 	' returns the value's type name
@@ -891,7 +903,8 @@ class JSONarray
 		i_defaultPropertyName = value
 	end property
 
-
+	
+	
 	' Constructor and destructor
 	private sub class_initialize
 		i_version = "2.2.2"
@@ -943,6 +956,23 @@ class JSONarray
 		
 		set obj = nothing
 	end sub
+
+	' Returns the item at the specified index
+	' @param index as int - the desired item index
+	public default function ItemAt(byval index)
+		dim len
+		len = me.length
+		
+		if len > 0 and index < len then
+			if isObject(i_items(index)) then
+				set ItemAt = i_items(index)
+			else
+				ItemAt = i_items(index)
+			end if
+		else
+			err.raise JSON_ERROR_INDEX_OUT_OF_BOUNDS, TypeName(me), "Index out of bounds."
+		end if
+	end function
 	
 	' Serializes this JSONarray object in JSON formatted string value
 	' (uses the JSONobject.SerializeArray method)

@@ -30,17 +30,17 @@ Option Explicit
 	server.ScriptTimeout = 10
 	dim jsonObj, jsonString, jsonArr, outputObj
 	dim testLoad, testAdd, testValue, testChange, testArrayPush, testLoadRecordset
-	dim testLoadArray, testChangeDefaultPropertyName
+	dim testLoadArray, testChangeDefaultPropertyName, testGetItemAt
 	
-	testLoad = true
-	testLoadArray = true
-	testAdd = true
-	testValue = true
+	testLoad = false
+	testLoadArray = false
+	testAdd = false
+	testValue = false
 	testChange = false
 	
-	testArrayPush = true
+	testArrayPush = false
 	
-	testLoadRecordset = false
+	testLoadRecordset = true
 	
 	testChangeDefaultPropertyName = true
 	
@@ -151,7 +151,7 @@ Option Explicit
 		rs.Update
 		
 		rs.moveFirst		
-		jsonObj.LoadRecordSet rs
+		jsonObj.LoadFirstRecord rs
 		' or
 		rs.moveFirst
 		jsonArr.LoadRecordSet rs
@@ -184,8 +184,7 @@ Option Explicit
 	<pre><%
 	dim i, items, item
 	
-	items = jsonArr.items ' needed because VB doesn't allow to access properties by index
-	
+
 	' more readable loop
 	i = 0
 	response.write "For Each Loop (readability):<br>==============<br>"
@@ -208,13 +207,13 @@ Option Explicit
 	response.write "<br><br>For Loop (speed):<br>=========<br>"
 	
 	' faster but less readable
-	for i = 0 to ubound(jsonArr.items)
+	for i = 0 to jsonArr.length - 1
 		response.write "Index "
 		response.write i
 		response.write ": "
 	
-		if isObject(items(i)) then
-			set item = items(i)
+		if isObject(jsonArr(i)) then
+			set item = jsonArr(i)
 			
 			if typeName(item) = "JSONobject" then
 				item.write()
@@ -222,12 +221,13 @@ Option Explicit
 				response.write item
 			end if
 		else
-			item = items(i)
+			item = jsonArr(i)
 			response.write item
 		end if
 		
 		response.write "<br>"
 	next
+
 	
 	set outputObj = nothing
 	set jsonObj = nothing
