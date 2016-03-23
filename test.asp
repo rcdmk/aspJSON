@@ -30,7 +30,7 @@ Option Explicit
 	server.ScriptTimeout = 10
 	dim jsonObj, jsonString, jsonArr, outputObj
 	dim testLoad, testAdd, testValue, testChange, testArrayPush, testLoadRecordset
-	dim testLoadArray, testChangeDefaultPropertyName
+	dim testLoadArray, testChangeDefaultPropertyName, testGetItemAt
 	
 	testLoad = true
 	testLoadArray = true
@@ -43,6 +43,8 @@ Option Explicit
 	testLoadRecordset = false
 	
 	testChangeDefaultPropertyName = true
+	
+	testGetItemAt = true
 	
 	set jsonObj = new JSONobject
 	set jsonArr = new jsonArray
@@ -228,6 +230,14 @@ Option Explicit
 		
 		response.write "<br>"
 	next
+	
+
+	if testGetItemAt then
+		response.write "Get By Index:<br>"
+		response.write "0: " & jsonArr.ItemAt(1) & "<br>" ' explicit method
+		response.write "1: " & jsonArr(2) & "<br>" ' using the default method
+	end if
+
 	
 	set outputObj = nothing
 	set jsonObj = nothing

@@ -28,6 +28,7 @@ const JSON_ERROR_PARSE = 1
 const JSON_ERROR_PROPERTY_ALREADY_EXISTS = 2
 const JSON_ERROR_PROPERTY_DOES_NOT_EXISTS = 3 ' DEPRECATED
 const JSON_ERROR_NOT_AN_ARRAY = 4
+const JSON_ERROR_INDEX_OUT_OF_BOUNDS = 9 ' Numbered to have the same error number as the default "Subscript out of range" exeption
 
 class JSONobject
 	dim i_debug, i_depth, i_parent
@@ -891,7 +892,8 @@ class JSONarray
 		i_defaultPropertyName = value
 	end property
 
-
+	
+	
 	' Constructor and destructor
 	private sub class_initialize
 		i_version = "2.2.2"
@@ -943,6 +945,20 @@ class JSONarray
 		
 		set obj = nothing
 	end sub
+
+	' Returns the item at the specified index
+	' @param index as int - the desired item index
+	public default function ItemAt(byval index)
+		if me.length > 0 and index < me.length then
+			if isObject(i_items(index)) then
+				set ItemAt = i_items(index)
+			else
+				ItemAt = i_items(index)
+			end if
+		else
+			err.raise JSON_ERROR_INDEX_OUT_OF_BOUNDS, TypeName(me), "Index out of bounds."
+		end if
+	end function
 	
 	' Serializes this JSONarray object in JSON formatted string value
 	' (uses the JSONobject.SerializeArray method)
