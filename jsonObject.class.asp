@@ -794,7 +794,8 @@ class JSONobject
 		ArrayPush = arr
 	end function
 	
-	' Load properties from a ADO RecordSet object
+	' Load properties from an ADO RecordSet object into an array
+	' @param rs as ADODB.RecordSet
 	public sub LoadRecordSet(byref rs)
 		dim arr, obj, field
 		
@@ -815,6 +816,16 @@ class JSONobject
 		set obj = nothing
 		
 		add i_defaultPropertyName, arr
+	end sub
+	
+	' Load properties from the first record of an ADO RecordSet object
+	' @param rs as ADODB.RecordSet
+	public sub LoadFirstRecord(byref rs)
+		dim field
+		
+		for each field in rs.fields
+			add field.name, field.value
+		next
 	end sub
 	
 	' returns the value's type name

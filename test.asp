@@ -32,15 +32,15 @@ Option Explicit
 	dim testLoad, testAdd, testValue, testChange, testArrayPush, testLoadRecordset
 	dim testLoadArray, testChangeDefaultPropertyName, testGetItemAt
 	
-	testLoad = true
-	testLoadArray = true
-	testAdd = true
-	testValue = true
+	testLoad = false
+	testLoadArray = false
+	testAdd = false
+	testValue = false
 	testChange = false
 	
-	testArrayPush = true
+	testArrayPush = false
 	
-	testLoadRecordset = false
+	testLoadRecordset = true
 	
 	testChangeDefaultPropertyName = true
 	
@@ -151,7 +151,7 @@ Option Explicit
 		rs.Update
 		
 		rs.moveFirst		
-		jsonObj.LoadRecordSet rs
+		jsonObj.LoadFirstRecord rs
 		' or
 		rs.moveFirst
 		jsonArr.LoadRecordSet rs
