@@ -654,7 +654,7 @@ class JSONobject
 				out = """" & year(value) & "-" & padZero(month(value), 2) & "-" & padZero(day(value), 2) & "T" & padZero(hour(value), 2) & ":" & padZero(minute(value), 2) & ":" & padZero(second(value), 2) & left(offset, 1) & padZero(mid(offset, 2), 2) & ":00"""
 			
 			case "string", "char", "empty"
-				out = """" & value & """"
+				out = """" & replace(value,"""","\""") & """"
 			
 			case else
 				out = """" & GetTypeName(value) & """"
