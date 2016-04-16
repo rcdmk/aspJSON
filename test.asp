@@ -32,7 +32,7 @@ Option Explicit
 	dim testLoad, testAdd, testValue, testChange, testArrayPush, testLoadRecordset
 	dim testLoadArray, testChangeDefaultPropertyName, testGetItemAt
 	
-	testLoad = false
+	testLoad = true
 	testLoadArray = false
 	testAdd = false
 	testValue = false
@@ -40,9 +40,9 @@ Option Explicit
 	
 	testArrayPush = false
 	
-	testLoadRecordset = true
+	testLoadRecordset = false
 	
-	testChangeDefaultPropertyName = true
+	testChangeDefaultPropertyName = false
 	
 	set jsonObj = new JSONobject
 	set jsonArr = new jsonArray
@@ -50,7 +50,7 @@ Option Explicit
 	jsonObj.debug = false
 	
 	if testLoad then
-		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""emptyArray"": [], ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] } }"
+		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, 6, [7, 8]]], ""emptyArray"": [], ""emptyObject"": {}, ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] } }"
 		
 		if testLoadArray then jsonString = "[" & jsonString & "]"
 		
