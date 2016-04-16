@@ -227,6 +227,10 @@ class JSONobject
 				if char = """" then
 					log("Open key")
 					mode = "closeKey"
+				elseif char = "}" then ' empty objects
+					log("Empty object")
+					mode = "next"
+					i = i - 1 ' we backup one char to make the next iteration get the closing bracket
 				end if
 			
 			' Fill in the key until finding a double quote "
