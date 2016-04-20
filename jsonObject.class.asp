@@ -4,16 +4,16 @@
 ' Licence:
 ' The MIT License (MIT)
 ' Copyright (c) 2016 RCDMK - rcdmk[at]hotmail[dot]com
-' 
+'
 ' Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 ' associated documentation files (the "Software"), to deal in the Software without restriction,
 ' including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
 ' and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
 ' subject to the following conditions:
-' 
+'
 ' The above copyright notice and this permission notice shall be included in all copies or substantial
 ' portions of the Software.
-' 
+'
 ' THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
 ' NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 ' IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
@@ -69,7 +69,7 @@ class JSONobject
 	' The parent object
 	public property get parent
 		set parent = i_parent
-	end property	
+	end property
 	
 	public property set parent(value)
 		set i_parent = value
@@ -178,7 +178,7 @@ class JSONobject
 							log("Added to parent object: """ & key & """")
 						end if
 												
-						set currentObject = item						
+						set currentObject = item
 					end if
 					
 					openObject = openObject + 1
@@ -191,7 +191,7 @@ class JSONobject
 					set item = new JSONarray
 					if key = JSON_ROOT_KEY then set root = item
 					
-					addedToArray = false					
+					addedToArray = false
 					
 					' Array is inside an array
 					if isobject(currentArray) and openArray > 0 then
@@ -250,7 +250,7 @@ class JSONobject
 					log("Open value for """ & key & """")
 				end if
 			
-			' Begining of value	
+			' Begining of value
 			elseif mode = "openValue" then
 				value = ""
 				
@@ -464,7 +464,7 @@ class JSONobject
 					
 					openObject = openObject - 1
 					
-					mode = "next"					
+					mode = "next"
 				end if
 			end if
 			
@@ -658,7 +658,7 @@ class JSONobject
 				out = """" & year(value) & "-" & padZero(month(value), 2) & "-" & padZero(day(value), 2) & "T" & padZero(hour(value), 2) & ":" & padZero(minute(value), 2) & ":" & padZero(second(value), 2) & left(offset, 1) & padZero(mid(offset, 2), 2) & ":00"""
 			
 			case "string", "char", "empty"
-				out = """" & replace(value,"""","\""") & """"
+				out = """" & EscapeCharacters(value) & """"
 			
 			case else
 				out = """" & GetTypeName(value) & """"
@@ -680,7 +680,6 @@ class JSONobject
 	end function
 	
 	' By DavidRR: http://stackoverflow.com/a/13980554/1046610
-	' 
 	private Function GetTimeZoneOffset()
 		Const sComputer = "."
 
@@ -772,9 +771,9 @@ class JSONobject
 	
 	
 	' Returns the number of dimensions an array has
-	private Function NumDimensions(byref arr) 
+	private Function NumDimensions(byref arr)
 		Dim dimensions
-		dimensions = 0 
+		dimensions = 0
 		
 		On Error Resume Next
 		
@@ -785,7 +784,7 @@ class JSONobject
 		On Error Goto 0
 		
 		NumDimensions = dimensions - 1
-	End Function 
+	End Function
 	
 	' Pushes (adds) a value to an array, expanding it
 	public function ArrayPush(byref arr, byref value)
@@ -803,7 +802,7 @@ class JSONobject
 	public sub LoadRecordSet(byref rs)
 		dim arr, obj, field
 		
-		set arr = new JSONArray	
+		set arr = new JSONArray
 		
 		while not rs.eof
 			set obj = new JSONobject
@@ -832,7 +831,7 @@ class JSONobject
 		next
 	end sub
 	
-	' returns the value's type name
+	' Returns the value's type name
 	public function GetTypeName(byval value)
 		dim valueType
 	
@@ -845,6 +844,24 @@ class JSONobject
 		on error goto 0
 		
 		GetTypeName = valueType
+	end function
+	
+	' Escapes special characters in the text
+	' @param text as String
+	public function EscapeCharacters(byval text)
+		dim result
+		
+		result = text
+	
+		if not isNull(text) then
+			result = cstr(result)
+			
+			result = replace(result, """", "\""")
+			result = replace(result, vbcr, "\r")
+			result = replace(result, vblf, "\n")
+		end if
+	
+		EscapeCharacters = result
 	end function
 	
 	' Used to write the log messages to the response on debug mode
@@ -862,7 +879,7 @@ class JSONarray
 	' The class version
 	public property get version
 		items = i_version
-	end property	
+	end property
 
 	' The actual array items
 	public property get items
@@ -875,7 +892,7 @@ class JSONarray
 		else
 			err.raise JSON_ERROR_NOT_AN_ARRAY, TypeName(me), "The value assigned is not an array."
 		end if
-	end property	
+	end property
 	
 	' The length of the array
 	public property get length
@@ -890,7 +907,7 @@ class JSONarray
 	' The parent object or array
 	public property get parent
 		set parent = i_parent
-	end property	
+	end property
 	
 	public property set parent(value)
 		set i_parent = value
@@ -953,7 +970,7 @@ class JSONarray
 				obj.Add field.name, field.value
 			next
 			
-			Push obj			
+			Push obj
 			
 			rs.movenext
 		wend
@@ -1045,7 +1062,7 @@ class JSONpair
 	' The parent object
 	public property get parent
 		set parent = i_parent
-	end property	
+	end property
 	
 	public property set parent(val)
 		set i_parent = val
