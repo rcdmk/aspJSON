@@ -34,7 +34,7 @@ Option Explicit
 	
 	testLoad = true
 	testLoadArray = false
-	testAdd = false
+	testAdd = true
 	testValue = false
 	testChange = false
 	
@@ -69,7 +69,7 @@ Option Explicit
 		multArr(0, 0) = "0,0"
 		multArr(0, 1) = "0,1"
 		multArr(1, 0) = "1,0"
-		multArr(1, 1) = "1,1"		
+		multArr(1, 1) = "1,1"
 		
 		jsonObj.add "nome", "Jozé"
 		jsonObj.add "idade", 25
@@ -78,7 +78,7 @@ Option Explicit
 		
 		set nestedObject = new JSONobject
 		nestedObject.add "sub1", "value of sub1"
-		nestedObject.add "sub2", "value of sub2"
+		nestedObject.add "sub2", "value of ""sub2"""
 		
 		jsonObj.add "nested", nestedObject
 	end if
@@ -115,10 +115,10 @@ Option Explicit
 	if testLoadRecordset then
 		%><h3>Load a Recordset</h3>
 		<!--
-		   METADATA    
-		   TYPE="TypeLib"    
-		   NAME="Microsoft ActiveX Data Objects 2.5 Library"    
-		   UUID="{00000205-0000-0010-8000-00AA006D2EA4}"    
+		   METADATA
+		   TYPE="TypeLib"
+		   NAME="Microsoft ActiveX Data Objects 2.5 Library"
+		   UUID="{00000205-0000-0010-8000-00AA006D2EA4}"
 		   VERSION="2.5"
 		-->
 		<%
@@ -150,7 +150,7 @@ Option Explicit
 		rs("Valor") = 29.90
 		rs.Update
 		
-		rs.moveFirst		
+		rs.moveFirst
 		jsonObj.LoadFirstRecord rs
 		' or
 		rs.moveFirst
@@ -164,7 +164,7 @@ Option Explicit
 	if testLoad then
 		%>
 		<h3>Parse Output</h3>
-		<pre><%= outputObj.write %></pre>	
+		<pre><%= outputObj.write %></pre>
 		<%
 	end if
 	
