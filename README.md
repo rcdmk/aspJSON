@@ -35,7 +35,7 @@ Response.Write JSON("prop3") & "<br>" ' default function is equivalent to `.Valu
 Response.Write JSON("prop4") & "<br>"
 
 ' get the JSON formatted output
-Dim jsonSting
+Dim jsonString
 jsonString = JSON.Serialize() ' this will contain the string representation of the JSON object
 
 JSON.Write() ' this will write the output to the Response - equivalent to: Response.Write JSON.Serialize()
