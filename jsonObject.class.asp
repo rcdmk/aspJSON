@@ -483,7 +483,7 @@ class JSONobject
 		dim p
 		getProperty prop, p
 		
-		if isObject(p) then
+		if TypeName(p) = "JSONpair" then
 			err.raise JSON_ERROR_PROPERTY_ALREADY_EXISTS, TypeName(me), "A property already exists with the name: " & prop & "."
 		else
 			dim item
@@ -514,7 +514,7 @@ class JSONobject
 		dim p
 		getProperty prop, p
 		
-		if isObject(p) then
+		if TypeName(p) = "JSONpair" then
 			if isObject(p.value) then
 				set value = p.value
 			else
@@ -531,7 +531,7 @@ class JSONobject
 		dim p
 		getProperty prop, p
 		
-		if isObject(p) then
+		if TypeName(p) = "JSONpair" then
 			if isArray(obj) then
 				set item = new JSONarray
 				item.items = obj
@@ -551,10 +551,10 @@ class JSONobject
 	
 	' Returns a property if it exists
 	' @param prop as string - the property name
-	' @param out outProp as variant - will be filled with the property value, null if not found
+	' @param out outProp as variant - will be filled with the property value, nothing if not found
 	private sub getProperty(byval prop, byref outProp)
 		dim i, p
-		outProp = null
+		set outProp = nothing
 		
 		do while i <= ubound(i_properties)
 			set p = i_properties(i)

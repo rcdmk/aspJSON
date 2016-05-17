@@ -31,7 +31,7 @@ JSON.Change "prop4", "thisWillBeCreated" ' this property doen't exists and will 
 ' get the values
 Response.Write JSON.Value("prop1") & "<br>"
 Response.Write JSON.Value("prop2") & "<br>"
-Response.Write JSON("prop3") & "<br>" ' default function is equivalent to `.Value(propName)`
+Response.Write JSON("prop3").Serialize() & "<br>" ' default function is equivalent to `.Value(propName)` - this property returns a JSONarray object
 Response.Write JSON("prop4") & "<br>"
 
 ' get the JSON formatted output
