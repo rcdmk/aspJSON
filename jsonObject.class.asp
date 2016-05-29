@@ -309,7 +309,20 @@ class JSONobject
 					if char = """" and prevchar <> "\" then
 						log("Close string value: """ & value & """")
 						mode = "addValue"
-					else
+						
+					' special and escaped chars
+					elseif prevchar = "\" then
+						select case char
+							case "n"
+								value = value & vblf
+							case "r"
+								value = value & vbcr
+							case "t"
+								value = value & vbtab
+							case else
+								value = value & char
+						end select
+					elseif char <> "\" then
 						value = value & char
 					end if
 				else
@@ -863,9 +876,11 @@ class JSONobject
 		if not isNull(text) then
 			result = cstr(result)
 			
+			result = replace(result, "\", "\\")
 			result = replace(result, """", "\""")
 			result = replace(result, vbcr, "\r")
 			result = replace(result, vblf, "\n")
+			result = replace(result, vbtab, "\t")
 		end if
 	
 		EscapeCharacters = result
