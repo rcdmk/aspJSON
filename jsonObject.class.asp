@@ -289,6 +289,10 @@ class JSONobject
 						quoted = false
 						value = char
 						mode = "closeValue"
+						if prevchar = "+" OR prevchar = "-" then
+							i = i - 1 ' we backup one char to add the signal to parse
+							char = prevchar
+						end if
 						
 					' special values: null, true, false and undefined
 					elseif char = "n" or char = "t" or char = "f" or char = "u" then
@@ -301,12 +305,24 @@ class JSONobject
 			
 			' Fill in the value until finish
 			elseif mode = "closeValue" then
-				
 				if quoted then
 					if char = """" and prevchar <> "\" then
 						log("Close string value: """ & value & """")
 						mode = "addValue"
-					else
+						
+					' special and escaped chars
+					elseif prevchar = "\" then
+						select case char
+							case "n"
+								value = value & vblf
+							case "r"
+								value = value & vbcr
+							case "t"
+								value = value & vbtab
+							case else
+								value = value & char
+						end select
+					elseif char <> "\" then
 						value = value & char
 					end if
 				else
@@ -319,7 +335,11 @@ class JSONobject
 						' If is a numeric char
 						if regex.pattern <> "\d" then regex.pattern = "\d"
 						if regex.test(char) then
-							value = value & char
+							if prevchar = "-" then
+								value = prevchar & value
+							else							
+								value = value & char
+							end if
 						
 						' If it's not a numeric char, but the prev char was a number
 						' used to catch separators and special numeric chars
@@ -856,9 +876,11 @@ class JSONobject
 		if not isNull(text) then
 			result = cstr(result)
 			
+			result = replace(result, "\", "\\")
 			result = replace(result, """", "\""")
 			result = replace(result, vbcr, "\r")
 			result = replace(result, vblf, "\n")
+			result = replace(result, vbtab, "\t")
 		end if
 	
 		EscapeCharacters = result
