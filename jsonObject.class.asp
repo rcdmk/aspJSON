@@ -1020,7 +1020,10 @@ class JSONarray
 	' Serializes this JSONarray object in JSON formatted string value
 	' (uses the JSONobject.SerializeArray method)
 	public function Serialize()
-		dim js, out, instantiated
+		dim js, out, instantiated, actualLCID
+		
+		actualLCID = session.LCID
+		session.LCID = 1033
 		
 		if not isEmpty(i_parent) then
 			if TypeName(i_parent) = "JSONobject" then
@@ -1038,6 +1041,8 @@ class JSONarray
 		out = js.SerializeArray(me)
 		
 		if instantiated then set js = nothing
+		
+		session.LCID = actualLCID
 		
 		Serialize = out
 	end function
