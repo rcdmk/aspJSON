@@ -510,7 +510,7 @@ class JSONobject
 			set item = new JSONpair
 			item.name = prop
 			set item.parent = me
-			
+
 			if isArray(obj) then
 				dim item2
 				set item2 = new JSONarray
@@ -519,7 +519,7 @@ class JSONobject
 
 				set item.value = item2
 				
-			elseif isObject(obj) then
+			elseif isObject(obj) and typeName(obj) <> "IStringList" then
 				set item.value = obj
 			else
 				item.value = obj
