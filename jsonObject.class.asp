@@ -510,7 +510,7 @@ class JSONobject
 			set item = new JSONpair
 			item.name = prop
 			set item.parent = me
-			
+
 			if isArray(obj) then
 				dim item2
 				set item2 = new JSONarray
@@ -519,7 +519,7 @@ class JSONobject
 
 				set item.value = item2
 				
-			elseif isObject(obj) then
+			elseif isObject(obj) and typeName(obj) <> "IStringList" then
 				set item.value = obj
 			else
 				item.value = obj
@@ -699,21 +699,15 @@ class JSONobject
 		padZero = result
 	end function
 	
-	' By DavidRR: http://stackoverflow.com/a/13980554/1046610
+	' Returns the time zone offset from the UTC time in hours (eg.: -3)
 	private Function GetTimeZoneOffset()
-		Const sComputer = "."
-
-		Dim oWmiService : Set oWmiService = _
-			GetObject("winmgmts:{impersonationLevel=impersonate}!\\" & sComputer & "\root\cimv2")
-
-		Dim cItems : Set cItems = oWmiService.ExecQuery("SELECT * FROM Win32_ComputerSystem")
-
-		Dim oItem
-		
-		For Each oItem In cItems
-			GetTimeZoneOffset = oItem.CurrentTimeZone / 60
-			Exit For
-		Next
+		' http://ajaxandxml.blogspot.com.br/2006/02/computing-server-time-zone-difference.html
+		%>
+		<script runat="server" language="jscript">
+			var JSON_TZDiff = new Date().getTimezoneOffset();
+		</script>
+		<%		
+		GetTimeZoneOffset = - JSON_TZDiff / 60
 	End Function
 	
 	' Serializes an array or JSONarray object to JSON formatted string
