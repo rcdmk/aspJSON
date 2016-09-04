@@ -785,7 +785,7 @@ class JSONobject
 	
 	
 	' Returns the number of dimensions an array has
-	private Function NumDimensions(byref arr)
+	public Function NumDimensions(byref arr)
 		Dim dimensions
 		dimensions = 0
 		
@@ -944,16 +944,31 @@ class JSONarray
 	
 	' Constructor and destructor
 	private sub class_initialize
-		i_version = "2.3.1"
+		i_version = "2.3.2"
 		i_defaultPropertyName = JSON_DEFAULT_PROPERTY_NAME
 		redim i_items(-1)
 		i_depth = 0
 	end sub
 	
 	private sub class_terminate
-		dim i
-		for i = 0 to ubound(i_items)
-			set i_items(i) = nothing
+		dim i, j, js, dimensions
+		
+		if typeName(i_parent) = "JSONobject" then
+			set js = i_parent
+		else
+			set js = new JSONobject
+		end if
+		
+		dimensions = js.NumDimensions(i_items)
+		
+		for i = 1 to dimensions
+			for j = 0 to ubound(i_items, i)
+				if dimensions = 1 then
+					set i_items(j) = nothing
+				else
+					set i_items(i - 1, j) = nothing
+				end if
+			next
 		next
 	end sub
 	
