@@ -529,6 +529,15 @@ class JSONobject
 		end if
 	end sub
 	
+	' Remove a property from the object (key-value pair)
+	public sub remove(byval prop)
+		dim p, i
+		i = getProperty(prop, p)
+		
+		' property exists
+		if i > -1 then ArraySlice i_properties, i
+	end sub
+	
 	' Return the value of a property by its key
 	public default function value(byval prop)
 		dim p
@@ -569,25 +578,33 @@ class JSONobject
 		end if
 	end sub
 	
-	' Returns a property if it exists
+	' Returns the index of a property if it exists, else -1
 	' @param prop as string - the property name
 	' @param out outProp as variant - will be filled with the property value, nothing if not found
-	private sub getProperty(byval prop, byref outProp)
-		dim i, p
+	private function getProperty(byval prop, byref outProp)
+		dim i, p, found
 		set outProp = nothing
+		found = false		
 		
+		i = 0
+
 		do while i <= ubound(i_properties)
 			set p = i_properties(i)
 			
 			if p.name = prop then
 				set outProp = p
+				found = true
 				
 				exit do
 			end if
 			
 			i = i + 1
 		loop
-	end sub
+		
+		if not found then i = -1
+		
+		getProperty = i
+	end function
 	
 	
 	' Serialize the current object to a JSON formatted string
@@ -803,12 +820,35 @@ class JSONobject
 	' Pushes (adds) a value to an array, expanding it
 	public function ArrayPush(byref arr, byref value)
 		redim preserve arr(ubound(arr) + 1)
+		
 		if isobject(value) then
 			set arr(ubound(arr)) = value
 		else
 			arr(ubound(arr)) = value
 		end if
+		
 		ArrayPush = arr
+	end function
+	
+	' Removes a value from an array
+	private function ArraySlice(byref arr, byref index)
+		dim i, upperBound
+		i = index
+		upperBound = ubound(arr)
+		
+		do while i < upperBound
+			if isObject(arr(i)) then
+				set arr(i) = arr(i + 1)
+			else
+				arr(i) = arr(i + 1)
+			end if
+			
+			i = i + 1
+		loop
+		
+		redim preserve arr(upperBound)
+		
+		ArraySlice = arr
 	end function
 	
 	' Load properties from an ADO RecordSet object into an array

@@ -29,12 +29,13 @@ Option Explicit
 	<%
 	server.ScriptTimeout = 10
 	dim jsonObj, jsonString, jsonArr, outputObj
-	dim testLoad, testAdd, testValue, testChange, testArrayPush, testLoadRecordset
+	dim testLoad, testAdd, testRemove, testValue, testChange, testArrayPush, testLoadRecordset
 	dim testLoadArray, testChangeDefaultPropertyName, testGetItemAt
 	
 	testLoad = true
 	testLoadArray = false
 	testAdd = true
+	testRemove = true
 	testValue = true
 	testChange = true
 	
@@ -86,6 +87,10 @@ Option Explicit
 		jsonObj.add "nested", nestedObject
 	end if
 	
+	if testRemove then
+		jsonObj.remove "numbers"
+		jsonObj.remove "aNonExistantPropertyName" ' this sould run silently, even to non existant properties
+	end if
 	
 	if testValue then
 		%><h3>Get Values</h3><%
