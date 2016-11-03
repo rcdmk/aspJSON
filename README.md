@@ -24,6 +24,10 @@ JSON.Add "prop1", "someString"
 JSON.Add "prop2", 12.3
 JSON.Add "prop3", Array(1, 2, "three")
 
+' remove properties
+JSON.Remove "prop2"
+JSON.Remove "thisDoesNotExistsAndWillDoNothing"
+
 ' change some values
 JSON.Change "prop1", "someOtherString"
 JSON.Change "prop4", "thisWillBeCreated" ' this property doen't exists and will be created automagically
