@@ -109,8 +109,8 @@ class JSONobject
 		log("Load string: """ & strJson & """")
 		
 		' Store the actual LCID and use the en-US to conform with the JSON standard
-		actualLCID = session.LCID
-		session.LCID = 1033
+		actualLCID = Response.LCID
+		Response.LCID = 1033
 		
 		strJson = trim(strJson)
 		
@@ -489,7 +489,7 @@ class JSONobject
 		
 		set regex = nothing
 		
-		session.LCID = actualLCID
+		Response.LCID = actualLCID
 		
 		set parse = root
 	end function
@@ -606,12 +606,12 @@ class JSONobject
 	' Serialize the current object to a JSON formatted string
 	public function Serialize()
 		dim actualLCID, out
-		actualLCID = session.LCID
-		session.LCID = 1033
+		actualLCID = Response.LCID
+		Response.LCID = 1033
 		
 		out = serializeObject(me)
 		
-		session.LCID = actualLCID
+		Response.LCID = actualLCID
 		
 		Serialize = out
 	end function
@@ -1072,8 +1072,8 @@ class JSONarray
 	public function Serialize()
 		dim js, out, instantiated, actualLCID
 		
-		actualLCID = session.LCID
-		session.LCID = 1033
+		actualLCID = Response.LCID
+		Response.LCID = 1033
 		
 		if not isEmpty(i_parent) then
 			if TypeName(i_parent) = "JSONobject" then
@@ -1092,7 +1092,7 @@ class JSONarray
 		
 		if instantiated then set js = nothing
 		
-		session.LCID = actualLCID
+		Response.LCID = actualLCID
 		
 		Serialize = out
 	end function
