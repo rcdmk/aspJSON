@@ -989,13 +989,18 @@ class JSONarray
 	private sub class_terminate
 		dim i, j, js, dimensions
 		
-		if typeName(i_parent) = "JSONobject" then
-			set js = i_parent
-		else
-			set js = new JSONobject
-		end if
+		dimensions = 0
 		
-		dimensions = js.NumDimensions(i_items)
+		On Error Resume Next
+		
+		Do While Err.number = 0
+			dimensions = dimensions + 1
+			UBound i_items, dimensions
+		Loop
+		
+		On Error Goto 0
+		
+		dimensions = dimensions - 1
 		
 		for i = 1 to dimensions
 			for j = 0 to ubound(i_items, i)
