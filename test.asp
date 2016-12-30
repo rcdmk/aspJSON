@@ -19,7 +19,7 @@ Option Explicit
 			padding: 5px;
 			text-indent: 0;
 			width: 90%;
-			word-break: break-strict;
+			white-space: pre-wrap;
 			word-wrap: break-word;
 		}
 	</style>
@@ -33,7 +33,7 @@ Option Explicit
 	dim testLoadArray, testChangeDefaultPropertyName, testGetItemAt
 	
 	testLoad = true
-	testLoadArray = false
+	testLoadArray = true
 	testAdd = true
 	testRemove = true
 	testValue = true
@@ -51,7 +51,7 @@ Option Explicit
 	jsonObj.debug = false
 	
 	if testLoad then
-		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, -6, [7, 8]]], ""emptyArray"": [], ""emptyObject"": {}, ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] }, ""multiline"": ""Texto com\r\nMais de\r\numa linha e escapado com \\."" }"
+		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, -6, [7, 8, [[[""9"", ""10""]]]]]], ""emptyArray"": [], ""emptyObject"": {}, ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] }, ""multiline"": ""Texto com\r\nMais de\r\numa linha e escapado com \\."" }"
 		
 		if testLoadArray then jsonString = "[" & jsonString & "]"
 		

@@ -161,11 +161,7 @@ class JSONobject
 							if currentArray.depth > currentObject.depth then
 								' Add it to the array
 								set item.parent = currentArray
-								tmpArray = currentArray.items
-								
-								ArrayPush tmpArray, item
-								
-								currentArray.items = tmpArray
+								currentArray.Push item
 								
 								addedToArray = true
 
@@ -189,7 +185,6 @@ class JSONobject
 					log("Create array<ul>")
 					
 					set item = new JSONarray
-					if key = JSON_ROOT_KEY then set root = item
 					
 					addedToArray = false
 					
@@ -198,11 +193,7 @@ class JSONobject
 						if currentArray.depth > currentObject.depth then
 							' Add it to the array
 							set item.parent = currentArray
-							tmpArray = currentArray.items
-							
-							ArrayPush tmpArray, item
-							
-							currentArray.items = tmpArray
+							currentArray.Push item
 							
 							addedToArray = true
 							
@@ -214,6 +205,11 @@ class JSONobject
 						set item.parent = currentObject
 						currentObject.add key, item
 						log("Added to parent object")
+					end if
+
+					if key = JSON_ROOT_KEY and item.depth = 1 then
+						set root = item
+						log("Set as root")
 					end if
 					
 					set currentArray = item
@@ -1016,7 +1012,7 @@ class JSONarray
 	public sub Push(byref value)
 		dim js, instantiated
 		
-		if not isEmpty(i_parent) then
+		if typeName(i_parent) = "JSONobject" then
 			set js = i_parent
 			i_defaultPropertyName = i_parent.defaultPropertyName
 		else
