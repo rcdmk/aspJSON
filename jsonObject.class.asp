@@ -143,13 +143,13 @@ class JSONobject
 				log("Enter init")
 				
 				' if we are in root, clear previous object properties
-				if key = JSON_ROOT_KEY and GetTypeName(currentArray) <> "JSONarray" then redim i_properties(-1)
+				if key = JSON_ROOT_KEY and TypeName(currentArray) <> "JSONarray" then redim i_properties(-1)
 				
 				' Init object
 				if char = "{" then
 					log("Create object<ul>")
 					
-					if key <> JSON_ROOT_KEY or GetTypeName(root) = "JSONarray" then
+					if key <> JSON_ROOT_KEY or TypeName(root) = "JSONarray" then
 						' creates a new object
 						set item = new JSONobject
 						set item.parent = currentObject
@@ -157,7 +157,7 @@ class JSONobject
 						addedToArray = false
 						
 						' Object is inside an array
-						if GetTypeName(currentArray) = "JSONarray" then
+						if TypeName(currentArray) = "JSONarray" then
 							if currentArray.depth > currentObject.depth then
 								' Add it to the array
 								set item.parent = currentArray
@@ -429,15 +429,15 @@ class JSONobject
 					
 					' If it's and open array, we close it and set the current array as its parent
 					if isobject(currentArray.parent) then
-						if GetTypeName(currentArray.parent) = "JSONarray" then
+						if TypeName(currentArray.parent) = "JSONarray" then
 							set currentArray = currentArray.parent
 						
 						' if the parent is an object
-						elseif GetTypeName(currentArray.parent) = "JSONobject" then
+						elseif TypeName(currentArray.parent) = "JSONobject" then
 							set tmpObj = currentArray.parent
 							
 							' we search for the next parent array to set the current array
-							while isObject(tmpObj) and GetTypeName(tmpObj) = "JSONobject"
+							while isObject(tmpObj) and TypeName(tmpObj) = "JSONobject"
 								if isObject(tmpObj.parent) then
 									set tmpObj = tmpObj.parent
 								else
@@ -460,15 +460,15 @@ class JSONobject
 					
 					' If it's an open object, we close it and set the current object as it's parent
 					if isobject(currentObject.parent) then
-						if GetTypeName(currentObject.parent) = "JSONobject" then
+						if TypeName(currentObject.parent) = "JSONobject" then
 							set currentObject = currentObject.parent
 						
 						' If the parent is and array
-						elseif GetTypeName(currentObject.parent) = "JSONarray" then
+						elseif TypeName(currentObject.parent) = "JSONarray" then
 							set tmpObj = currentObject.parent
 							
 							' we search for the next parent object to set the current object
-							while isObject(tmpObj) and GetTypeName(tmpObj) = "JSONarray"
+							while isObject(tmpObj) and TypeName(tmpObj) = "JSONarray"
 								set tmpObj = tmpObj.parent
 							wend
 							
@@ -499,7 +499,7 @@ class JSONobject
 		dim p
 		getProperty prop, p
 		
-		if TypeName(p) = "JSONpair" then
+		if GetTypeName(p) = "JSONpair" then
 			err.raise JSON_ERROR_PROPERTY_ALREADY_EXISTS, TypeName(me), "A property already exists with the name: " & prop & "."
 		else
 			dim item
@@ -515,7 +515,7 @@ class JSONobject
 
 				set item.value = item2
 				
-			elseif isObject(obj) and typeName(obj) <> "IStringList" then
+			elseif isObject(obj) and GetTypeName(obj) <> "IStringList" then
 				set item.value = obj
 			else
 				item.value = obj
@@ -539,7 +539,7 @@ class JSONobject
 		dim p
 		getProperty prop, p
 		
-		if TypeName(p) = "JSONpair" then
+		if GetTypeName(p) = "JSONpair" then
 			if isObject(p.value) then
 				set value = p.value
 			else
@@ -556,7 +556,7 @@ class JSONobject
 		dim p
 		getProperty prop, p
 		
-		if TypeName(p) = "JSONpair" then
+		if GetTypeName(p) = "JSONpair" then
 			if isArray(obj) then
 				set item = new JSONarray
 				item.items = obj
@@ -776,7 +776,7 @@ class JSONobject
 				else
 					val = elm
 				end if
-				
+
 				if isArray(val) or GetTypeName(val) = "JSONarray" then
 					out = out & serializeArray(val)
 					
@@ -881,12 +881,12 @@ class JSONobject
 		next
 	end sub
 	
-	' Returns the value's type name
+	' Returns the value's type name (usefull for types not supported by VBS)
 	public function GetTypeName(byval value)
 		dim valueType
 	
 		on error resume next
-			valueType = typeName(value)
+			valueType = TypeName(value)
 			
 			if err.number <> 0 then
 				if varType(value) = 14 then valueType = "Decimal"
