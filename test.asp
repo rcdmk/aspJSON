@@ -1,5 +1,7 @@
 <%
 Option Explicit
+Response.LCID = 1043 ' Brazilian LCID (use your locale code here).
+' Cold also be the LCID property of the page declaration or Session.LCID to set it to the entire session.
 %>
 <!--#include file="jsonObject.class.asp" -->
 <!DOCTYPE html>
@@ -51,7 +53,7 @@ Option Explicit
 	jsonObj.debug = false
 	
 	if testLoad then
-		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": [1, ""2"", 3.4, [5, -6, [7, 8, [[[""9"", ""10""]]]]]], ""emptyArray"": [], ""emptyObject"": {}, ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] }, ""multiline"": ""Texto com\r\nMais de\r\numa linha e escapado com \\."" }"
+		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""bools"": true, ""arrays"": [1, ""2"", 3.4, [5, -6, [7, 8, [[[""9"", ""10""]]]]]], ""emptyArray"": [], ""emptyObject"": {}, ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] }, ""multiline"": ""Texto com\r\nMais de\r\numa linha e escapado com \\."" }"
 		
 		if testLoadArray then jsonString = "[" & jsonString & "]"
 		
@@ -73,6 +75,7 @@ Option Explicit
 		multArr(1, 1) = "1,1"
 		
 		jsonObj.add "nome", "Jozé"
+		jsonObj.add "ficticio", true
 		jsonObj.add "idade", 25
 		jsonObj.add "saldo", -52
 		jsonObj.add "bio", "Nascido em São Paulo\Brasil" & vbcrlf & "Sem filhos" & vbcrlf & vbtab & "Jogador de WoW"
