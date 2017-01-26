@@ -18,7 +18,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 > You can do this by setting the LCID in one of the following ways:
 > * On the page declaration at the top of the page to set it to the entire page (eg.: `<%@ LCID=1043 %>`), OR
 > * On the `Session` object to set it to all pages in the entire session (eg.: `Session.LCID = 1043`), OR
-> * On the `Response` object, after using the class, to set it beyond this point on the page (eg.: `Response.LCID = 1043`)
+> * On the `Response` object, before using the class, to set it beyond this point on the page (eg.: `Response.LCID = 1043`)
 
 ```vb
 Response.LCID = 1043 ' REQUIRED! Set your LCID here (1043 = Brazilian). Could also be the LCID property of the page declaration or the Session.LCID property
