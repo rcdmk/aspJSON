@@ -1,5 +1,5 @@
 ﻿<%
-' JSON object class 3.5.3 - May, 29th - 2016
+' JSON object class 3.5.4 - May, 29th - 2016
 '
 ' Licence:
 ' The MIT License (MIT)
@@ -80,7 +80,7 @@ class JSONobject
 
 	' Constructor and destructor
 	private sub class_initialize()
-		i_version = "3.5.3"
+		i_version = "3.5.4"
 		i_depth = 0
 		i_debug = false
 		i_defaultPropertyName = JSON_DEFAULT_PROPERTY_NAME
