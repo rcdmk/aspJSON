@@ -642,7 +642,7 @@ class JSONobject
 			end if
 			
 			if prop.name = JSON_ROOT_KEY then
-				out = out & """" & i_defaultPropertyName & """:"
+				out = out & """" & obj.defaultPropertyName & """:"
 			else
 				out = out & """" & prop.name & """:"
 			end if
