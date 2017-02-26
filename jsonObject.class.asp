@@ -507,6 +507,9 @@ class JSONobject
 			item.name = prop
 			set item.parent = me
 
+			dim itemType
+			itemType = GetTypeName(obj)
+
 			if isArray(obj) then
 				dim item2
 				set item2 = new JSONarray
@@ -515,7 +518,9 @@ class JSONobject
 
 				set item.value = item2
 				
-			elseif isObject(obj) and GetTypeName(obj) <> "IStringList" then
+			elseif itemType = "Field" then
+				item.value = obj.value
+			elseif isObject(obj) and itemType <> "IStringList" then
 				set item.value = obj
 			else
 				item.value = obj
