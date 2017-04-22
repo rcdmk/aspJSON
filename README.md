@@ -1,7 +1,7 @@
 #JSON object class 3.5.4
 ##By RCDMK - rcdmk[at]hotmail[dot]com
 
-###Licence:
+### Licence:
 MIT license: http://opensource.org/licenses/mit-license.php  
 The MIT License (MIT)  
 Copyright (c) 2016 RCDMK - rcdmk[at]hotmail[dot]com  
@@ -12,7 +12,7 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  
 
-###How to use:
+### How to use:
 
 > This lib requires LCID (Locale Code IDentifier) property of your ASP application before use.
 > You can do this by setting the LCID in one of the following ways:
