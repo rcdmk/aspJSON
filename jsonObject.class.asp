@@ -285,9 +285,8 @@ class JSONobject
 						quoted = false
 						value = char
 						mode = "closeValue"
-						if prevchar = "+" OR prevchar = "-" then
-							i = i - 1 ' we backup one char to add the signal to parse
-							char = prevchar
+						if prevchar = "-" then
+							value = prevchar & char
 						end if
 						
 					' special values: null, true, false and undefined
@@ -328,19 +327,17 @@ class JSONobject
 						value = value & char
 						if value = "true" or value = "false" or value = "null" or value = "undefined" then mode = "addValue"
 					else
+						char = lcase(char)
+						
 						' If is a numeric char
 						if regex.pattern <> "\d" then regex.pattern = "\d"
 						if regex.test(char) then
-							if prevchar = "-" then
-								value = prevchar & value
-							else							
-								value = value & char
-							end if
+							value = value & char
 						
 						' If it's not a numeric char, but the prev char was a number
 						' used to catch separators and special numeric chars
-						elseif regex.test(prevchar) then
-							if char = "." or lcase(char) = "e" or lcase(char) = "-" or lcase(char) = "+" then
+						elseif regex.test(prevchar) or prevchar = "e" then
+							if char = "." or char = "e" or (prevchar = "e" and (char = "-" or char = "+")) then
 								value = value & char
 							else
 								log("Close numeric value: " & value)
