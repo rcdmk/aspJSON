@@ -1,5 +1,5 @@
-#JSON object class 3.5.4
-##By RCDMK - rcdmk[at]hotmail[dot]com
+# JSON object class 3.5.5
+## By RCDMK - rcdmk[at]hotmail[dot]com
 
 ### Licence:
 MIT license: http://opensource.org/licenses/mit-license.php  
