@@ -913,6 +913,7 @@ class JSONobject
 			result = replace(result, vbcr, "\r")
 			result = replace(result, vblf, "\n")
 			result = replace(result, vbtab, "\t")
+			result = replace(result, vbback, "\b")
 		end if
 	
 		EscapeCharacters = result
