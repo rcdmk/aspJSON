@@ -33,7 +33,8 @@ const JSON_ERROR_INDEX_OUT_OF_BOUNDS = 9 ' Numbered to have the same error numbe
 class JSONobject
 	dim i_debug, i_depth, i_parent
 	dim i_properties, i_version, i_defaultPropertyName
-
+	private vbback
+	
 	' Set to true to show the internals of the parsing mecanism
 	public property get debug
 		debug = i_debug
@@ -96,6 +97,8 @@ class JSONobject
 		next
 		
 		redim i_properties(-1)
+		
+		vbback = Chr(8)
 	end sub
 	
 	
