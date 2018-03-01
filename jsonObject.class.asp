@@ -315,7 +315,9 @@ class JSONobject
 							case "r"
 								value = value & vbcr
 							case "t"
-								value = value & char(8)
+								value = value & vbtab
+							case "b"
+								value = value & vbback								
 							case else
 								value = value & char
 						end select
@@ -914,7 +916,7 @@ class JSONobject
 			result = replace(result, """", "\""")
 			result = replace(result, vbcr, "\r")
 			result = replace(result, vblf, "\n")
-			result = replace(result, char(8), "\t")
+			result = replace(result, vbtab, "\t")
 			result = replace(result, vbback, "\b")
 		end if
 	
