@@ -761,72 +761,56 @@ class JSONobject
 
 	' Serializes an array or JSONarray object to JSON formatted string
 	public function serializeArray(byref arr)
-		dim i, j, dimensions, out, innerArray, elm, val
-		
+		dim i, j, k, dimensions, out, innerArray, elm, val
+
 		out = "["
 		
 		if isobject(arr) then
+			log("Serializing jsonArray object")
 			innerArray = arr.items
 		else
+			log("Serializing VB array")
 			innerArray = arr
 		end if
 
 		dimensions = NumDimensions(innerArray)
 		
-		for i = 1 to dimensions
-			if i > 1 then out = out & ","
-			
-			if dimensions > 1 then out = out & "["
-			
-			for j = 0 to ubound(innerArray, i)
+		if dimensions > 1 then
+			log("Multidimensional array")
+			for j = 0 to ubound(innerArray, 1)
+				for i = 2 to dimensions
+					if i > 2 then out = out & ","
+					out = out & "["
+
+					for k = 0 to ubound(innerArray, i)
+						if k > 0 then out = out & ","
+						
+						if isObject(innerArray(j, k)) then
+							set elm = innerArray(j, k)							
+						else
+							elm = innerArray(j, k)
+						end if
+
+						out = out & serializeArrayItem(elm)
+					next
+
+					out = out & "]"
+				next
+			next	
+		else
+			for j = 0 to ubound(innerArray)
 				if j > 0 then out = out & ","
 				
-				'multidimentional
-				if dimensions > 1 then
-					if isobject(innerArray(i - 1, j)) then
-						set elm = innerArray(i - 1, j)
-					else
-						elm = innerArray(i - 1, j)
-					end if
+				if isobject(innerArray(j)) then
+					set elm = innerArray(j)
 				else
-					if isobject(innerArray(j)) then
-						set elm = innerArray(j)
-					else
-						elm = innerArray(j)
-					end if
+					elm = innerArray(j)
 				end if
 								
-				if isobject(elm) then
-					if GetTypeName(elm) = "JSONobject" then
-						set val = elm
-					
-					elseif GetTypeName(elm) = "JSONarray" then
-						val = elm.items
-						
-					elseif isObject(elm.value) then
-						set val = elm.value
-						
-					else
-						val = elm.value
-					end if
-				else
-					val = elm
-				end if
-
-				if isArray(val) or GetTypeName(val) = "JSONarray" then
-					out = out & serializeArray(val)
-					
-				elseif isObject(val) then
-					out = out & serializeObject(val)
-					
-				else
-					out = out & serializeValue(val)
-				end if
-				
+				out = out & serializeArrayItem(elm)
 			next
-			if dimensions > 1 then out = out & "]"
-		next
-		
+		end if
+
 		out = out & "]"
 		
 		serializeArray = out
