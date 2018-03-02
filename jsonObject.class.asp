@@ -725,6 +725,40 @@ class JSONobject
 		GetTimeZoneOffset = - JSON_TZDiff / 60
 	End Function
 	
+	' Serializes an array item to JSON formatted string
+	private function serializeArrayItem(byref elm)
+		dim out, val
+
+		if isobject(elm) then
+			if GetTypeName(elm) = "JSONobject" then
+				set val = elm
+			
+			elseif GetTypeName(elm) = "JSONarray" then
+				val = elm.items
+				
+			elseif isObject(elm.value) then
+				set val = elm.value
+				
+			else
+				val = elm.value
+			end if
+		else
+			val = elm
+		end if
+
+		if isArray(val) or GetTypeName(val) = "JSONarray" then
+			out = out & serializeArray(val)
+			
+		elseif isObject(val) then
+			out = out & serializeObject(val)
+			
+		else
+			out = out & serializeValue(val)
+		end if
+
+		serializeArrayItem = out
+	end function
+
 	' Serializes an array or JSONarray object to JSON formatted string
 	public function serializeArray(byref arr)
 		dim i, j, dimensions, out, innerArray, elm, val
