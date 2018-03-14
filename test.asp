@@ -1,6 +1,6 @@
 <%
 Option Explicit
-Response.LCID = 1043 ' Brazilian LCID (use your locale code here).
+Response.LCID = 1046 ' Brazilian LCID (use your locale code here).
 ' Cold also be the LCID property of the page declaration or Session.LCID to set it to the entire session.
 %>
 <!--#include file="jsonObject.class.asp" -->
