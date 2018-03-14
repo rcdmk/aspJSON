@@ -673,7 +673,7 @@ class JSONobject
 	' Serializes a value to a valid JSON formatted string representing the value
 	' (quoted for strings, the type name for objects, null for nothing and null values)
 	public function serializeValue(byval value)
-		dim out, offset
+		dim out
 
 		select case lcase(GetTypeName(value))
 			case "null"
@@ -693,9 +693,7 @@ class JSONobject
 				out = value
 			
 			case "date"
-				offset = GetTimeZoneOffset()
-				
-				out = """" & year(value) & "-" & padZero(month(value), 2) & "-" & padZero(day(value), 2) & "T" & padZero(hour(value), 2) & ":" & padZero(minute(value), 2) & ":" & padZero(second(value), 2) & left(offset, 1) & padZero(mid(offset, 2), 2) & ":00"""
+				out = """" & year(value) & "-" & padZero(month(value), 2) & "-" & padZero(day(value), 2) & "T" & padZero(hour(value), 2) & ":" & padZero(minute(value), 2) & ":" & padZero(second(value), 2)
 			
 			case "string", "char", "empty"
 				out = """" & EscapeCharacters(value) & """"
@@ -718,17 +716,6 @@ class JSONobject
 		
 		padZero = result
 	end function
-	
-	' Returns the time zone offset from the UTC time in hours (eg.: -3)
-	private Function GetTimeZoneOffset()
-		' http://ajaxandxml.blogspot.com.br/2006/02/computing-server-time-zone-difference.html
-		%>
-		<script runat="server" language="jscript">
-			var JSON_TZDiff = new Date().getTimezoneOffset();
-		</script>
-		<%		
-		GetTimeZoneOffset = - JSON_TZDiff / 60
-	End Function
 	
 	' Serializes an array item to JSON formatted string
 	private function serializeArrayItem(byref elm)
