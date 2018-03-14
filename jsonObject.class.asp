@@ -778,24 +778,21 @@ class JSONobject
 		if dimensions > 1 then
 			log("Multidimensional array")
 			for j = 0 to ubound(innerArray, 1)
-				for i = 2 to dimensions
-					if i > 2 then out = out & ","
-					out = out & "["
+				out = out & "["
 
-					for k = 0 to ubound(innerArray, i)
-						if k > 0 then out = out & ","
-						
-						if isObject(innerArray(j, k)) then
-							set elm = innerArray(j, k)							
-						else
-							elm = innerArray(j, k)
-						end if
+				for k = 0 to ubound(innerArray, 2)
+					if k > 0 then out = out & ","
+					
+					if isObject(innerArray(j, k)) then
+						set elm = innerArray(j, k)							
+					else
+						elm = innerArray(j, k)
+					end if
 
-						out = out & serializeArrayItem(elm)
-					next
-
-					out = out & "]"
+					out = out & serializeArrayItem(elm)
 				next
+
+				out = out & "]"
 			next	
 		else
 			for j = 0 to ubound(innerArray)
