@@ -33,7 +33,8 @@ const JSON_ERROR_INDEX_OUT_OF_BOUNDS = 9 ' Numbered to have the same error numbe
 class JSONobject
 	dim i_debug, i_depth, i_parent
 	dim i_properties, i_version, i_defaultPropertyName
-
+	private vbback
+	
 	' Set to true to show the internals of the parsing mecanism
 	public property get debug
 		debug = i_debug
@@ -96,6 +97,8 @@ class JSONobject
 		next
 		
 		redim i_properties(-1)
+		
+		vbback = Chr(8)
 	end sub
 	
 	
@@ -313,7 +316,9 @@ class JSONobject
 							case "r"
 								value = value & vbcr
 							case "t"
-								value = value & char(8)
+								value = value & vbtab
+							case "b"
+								value = value & vbback
 							case else
 								value = value & char
 						end select
@@ -725,74 +730,89 @@ class JSONobject
 		GetTimeZoneOffset = - JSON_TZDiff / 60
 	End Function
 	
+	' Serializes an array item to JSON formatted string
+	private function serializeArrayItem(byref elm)
+		dim out, val
+
+		if isobject(elm) then
+			if GetTypeName(elm) = "JSONobject" then
+				set val = elm
+			
+			elseif GetTypeName(elm) = "JSONarray" then
+				val = elm.items
+				
+			elseif isObject(elm.value) then
+				set val = elm.value
+				
+			else
+				val = elm.value
+			end if
+		else
+			val = elm
+		end if
+
+		if isArray(val) or GetTypeName(val) = "JSONarray" then
+			out = out & serializeArray(val)
+			
+		elseif isObject(val) then
+			out = out & serializeObject(val)
+			
+		else
+			out = out & serializeValue(val)
+		end if
+
+		serializeArrayItem = out
+	end function
+
 	' Serializes an array or JSONarray object to JSON formatted string
 	public function serializeArray(byref arr)
-		dim i, j, dimensions, out, innerArray, elm, val
-		
+		dim i, j, k, dimensions, out, innerArray, elm, val
+
 		out = "["
 		
 		if isobject(arr) then
+			log("Serializing jsonArray object")
 			innerArray = arr.items
 		else
+			log("Serializing VB array")
 			innerArray = arr
 		end if
 
 		dimensions = NumDimensions(innerArray)
 		
-		for i = 1 to dimensions
-			if i > 1 then out = out & ","
-			
-			if dimensions > 1 then out = out & "["
-			
-			for j = 0 to ubound(innerArray, i)
+		if dimensions > 1 then
+			log("Multidimensional array")
+			for j = 0 to ubound(innerArray, 1)
+				out = out & "["
+
+				for k = 0 to ubound(innerArray, 2)
+					if k > 0 then out = out & ","
+					
+					if isObject(innerArray(j, k)) then
+						set elm = innerArray(j, k)							
+					else
+						elm = innerArray(j, k)
+					end if
+
+					out = out & serializeArrayItem(elm)
+				next
+
+				out = out & "]"
+			next	
+		else
+			for j = 0 to ubound(innerArray)
 				if j > 0 then out = out & ","
 				
-				'multidimentional
-				if dimensions > 1 then
-					if isobject(innerArray(i - 1, j)) then
-						set elm = innerArray(i - 1, j)
-					else
-						elm = innerArray(i - 1, j)
-					end if
+				if isobject(innerArray(j)) then
+					set elm = innerArray(j)
 				else
-					if isobject(innerArray(j)) then
-						set elm = innerArray(j)
-					else
-						elm = innerArray(j)
-					end if
+					elm = innerArray(j)
 				end if
 								
-				if isobject(elm) then
-					if GetTypeName(elm) = "JSONobject" then
-						set val = elm
-					
-					elseif GetTypeName(elm) = "JSONarray" then
-						val = elm.items
-						
-					elseif isObject(elm.value) then
-						set val = elm.value
-						
-					else
-						val = elm.value
-					end if
-				else
-					val = elm
-				end if
-
-				if isArray(val) or GetTypeName(val) = "JSONarray" then
-					out = out & serializeArray(val)
-					
-				elseif isObject(val) then
-					out = out & serializeObject(val)
-					
-				else
-					out = out & serializeValue(val)
-				end if
-				
+				out = out & serializeArrayItem(elm)
 			next
-			if dimensions > 1 then out = out & "]"
-		next
-		
+		end if
+
 		out = out & "]"
 		
 		serializeArray = out
@@ -912,7 +932,7 @@ class JSONobject
 			result = replace(result, """", "\""")
 			result = replace(result, vbcr, "\r")
 			result = replace(result, vblf, "\n")
-			result = replace(result, char(8), "\t")
+			result = replace(result, vbtab, "\t")
 			result = replace(result, vbback, "\b")
 		end if
 	
