@@ -43,9 +43,9 @@ Response.LCID = 1043 ' Brazilian LCID (use your locale code here).
 	
 	testArrayPush = true
 	
-	testLoadRecordset = false
+	testLoadRecordset = true
 	
-	testChangeDefaultPropertyName = false
+	testChangeDefaultPropertyName = true
 	
 	set jsonObj = new JSONobject
 	set jsonArr = new jsonArray
@@ -68,11 +68,21 @@ Response.LCID = 1043 ' Brazilian LCID (use your locale code here).
 		dim arr, multArr, nestedObject
 		arr = Array(1, "teste", 234.56, "mais teste", "234", now)
 		
-		redim multArr(1, 1)
+		redim multArr(2, 3)
 		multArr(0, 0) = "0,0"
 		multArr(0, 1) = "0,1"
+		multArr(0, 2) = "0,2"
+		multArr(0, 3) = "0,3"
+
 		multArr(1, 0) = "1,0"
 		multArr(1, 1) = "1,1"
+		multArr(1, 2) = "1,2"
+		multArr(1, 3) = "1,3"
+		
+		multArr(2, 0) = "2,0"
+		multArr(2, 1) = "2,1"
+		multArr(2, 2) = "2,2"
+		multArr(2, 3) = "2,3"
 		
 		jsonObj.add "nome", "Jozé"
 		jsonObj.add "ficticio", true
