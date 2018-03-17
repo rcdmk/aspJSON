@@ -1118,7 +1118,7 @@ end class
 
 
 class JSONscript
-	dim i_parent, i_depth, 	dim i_version
+	dim i_parent, i_depth, i_version
 	dim s_value, s_nullString
 
 	' The value
