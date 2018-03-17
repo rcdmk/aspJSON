@@ -657,6 +657,9 @@ class JSONobject
 			if isArray(value) or GetTypeName(value) = "JSONarray" then
 				out = out & serializeArray(value)
 				
+			elseif isObject(value) and GetTypeName(value) = "JSONscript" then
+				out = out & value.Serialize()
+
 			elseif isObject(value) then
 				out = out & serializeObject(value)
 				
@@ -1108,6 +1111,62 @@ class JSONarray
 	end function
 	
 	' Writes the serialized array to the response
+	public function Write()
+		Response.Write Serialize()
+	end function
+end class
+
+
+class JSONscript
+	dim i_parent, i_depth, 	dim i_version
+	dim s_value, s_nullString
+
+	' The value
+	public property get value
+		value = s_value
+	end property
+	
+	public property let value(newValue)
+		if (len(newValue) = 0) then newValue = s_nullString
+		s_value = newValue
+	end property
+	
+	' The parent object
+	public property get parent
+		set parent = i_parent
+	end property
+	
+	public property set parent(value)
+		set i_parent = value
+		i_depth = i_parent.depth + 1
+	end property
+	
+	' Constructor and destructor
+	private sub class_initialize()
+		i_version = "3.6.2"
+		
+		set i_parent = nothing
+		i_depth = 0
+		
+		s_nullString = "null"
+		s_value = s_nullString
+	end sub
+	
+	' Serializes this object by outputting the raw value
+	public function Serialize()
+		dim js, out, instantiated, actualLCID
+		
+		actualLCID = Response.LCID
+		Response.LCID = 1033
+		
+		out = s_value
+		
+		Response.LCID = actualLCID
+		
+		Serialize = out
+	end function
+	
+	' Writes the serialized object to the response
 	public function Write()
 		Response.Write Serialize()
 	end function
