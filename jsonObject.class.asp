@@ -990,7 +990,7 @@ class JSONarray
 	
 	' Constructor and destructor
 	private sub class_initialize
-		i_version = "2.3.5"
+		i_version = "3.6.2"
 		i_defaultPropertyName = JSON_DEFAULT_PROPERTY_NAME
 		redim i_items(-1)
 		i_depth = 0
