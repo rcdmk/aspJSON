@@ -254,5 +254,34 @@ Response.LCID = 1046 ' Brazilian LCID (use your locale code here).
 	set jsonObj = nothing
 	set jsonArr = nothing
 	%></pre>
+	
+	<h3>JSON Script Output</h3>
+	
+	<%
+	
+	dim realOutput
+	dim expectedOutput
+	
+	dim javascriptCode
+	dim javascriptkey
+	
+	dim jsonScr
+
+	javascriptCode = "function() { alert('test'); }"
+	javascriptKey = "script"
+	
+	expectedOutput = "{""" & javascriptKey & """:" & javascriptCode & "}"
+	
+	set jsonScr = new JSONscript
+	jsonScr.value = javascriptCode
+	
+	set jsonObj = new JSONobject
+	jsonObj.Add javascriptKey, jsonScr
+	
+	realOutput = jsonObj.Serialize()
+	
+	%><h4>Output<% if (realOutput = expectedOutput) then %> (correct)<% else %> (INCORRECT!)<% end if %></h4>
+	<pre><%= realOutput %></pre>
+	
 </body>
 </html>
