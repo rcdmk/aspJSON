@@ -88,6 +88,8 @@ class JSONobject
 		
 		set i_parent = nothing
 		redim i_properties(-1)
+		
+		vbback = Chr(8)
 	end sub
 	
 	private sub class_terminate()
@@ -97,8 +99,6 @@ class JSONobject
 		next
 		
 		redim i_properties(-1)
-		
-		vbback = Chr(8)
 	end sub
 	
 	
