@@ -28,6 +28,7 @@ const JSON_ERROR_PARSE = 1
 const JSON_ERROR_PROPERTY_ALREADY_EXISTS = 2
 const JSON_ERROR_PROPERTY_DOES_NOT_EXISTS = 3 ' DEPRECATED
 const JSON_ERROR_NOT_AN_ARRAY = 4
+const JSON_ERROR_NOT_A_STRING = 5
 const JSON_ERROR_INDEX_OUT_OF_BOUNDS = 9 ' Numbered to have the same error number as the default "Subscript out of range" exeption
 
 class JSONobject
@@ -1127,6 +1128,10 @@ class JSONscript
 	end property
 	
 	public property let value(newValue)
+		if (TypeName(newValue) <> "String") then
+			err.raise JSON_ERROR_NOT_A_STRING, TypeName(me), "The value assigned is not a string."
+		end if
+	
 		if (len(newValue) = 0) then newValue = s_nullString
 		s_value = newValue
 	end property
