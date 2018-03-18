@@ -1154,11 +1154,7 @@ class JSONscript
 	
 	' Serializes this object by outputting the raw value
 	public function Serialize()
-		dim js, out, instantiated
-		
 		Serialize = s_value
-		
-		Serialize = out
 	end function
 	
 	' Writes the serialized object to the response
