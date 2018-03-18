@@ -1154,14 +1154,9 @@ class JSONscript
 	
 	' Serializes this object by outputting the raw value
 	public function Serialize()
-		dim js, out, instantiated, actualLCID
+		dim js, out, instantiated
 		
-		actualLCID = Response.LCID
-		Response.LCID = 1033
-		
-		out = s_value
-		
-		Response.LCID = actualLCID
+		Serialize = s_value
 		
 		Serialize = out
 	end function
