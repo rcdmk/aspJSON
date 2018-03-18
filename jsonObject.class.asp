@@ -1119,7 +1119,7 @@ end class
 
 
 class JSONscript
-	dim i_parent, i_depth, i_version
+	dim i_version
 	dim s_value, s_nullString
 
 	' The value
@@ -1136,22 +1136,9 @@ class JSONscript
 		s_value = newValue
 	end property
 	
-	' The parent object
-	public property get parent
-		set parent = i_parent
-	end property
-	
-	public property set parent(value)
-		set i_parent = value
-		i_depth = i_parent.depth + 1
-	end property
-	
 	' Constructor and destructor
 	private sub class_initialize()
 		i_version = "3.6.2"
-		
-		set i_parent = nothing
-		i_depth = 0
 		
 		s_nullString = "null"
 		s_value = s_nullString
