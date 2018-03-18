@@ -1138,7 +1138,7 @@ class JSONscript
 	
 	' Constructor and destructor
 	private sub class_initialize()
-		i_version = "3.6.2"
+		i_version = "1.0.0"
 		
 		s_nullString = "null"
 		s_value = s_nullString
