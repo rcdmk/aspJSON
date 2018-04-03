@@ -556,6 +556,22 @@ class JSONobject
 			value = null
 		end if
 	end function
+
+	' Return the boolean that when
+	public function hasOwnProperty(byval prop)
+		dim p
+		getProperty prop, p
+
+		if GetTypeName(p) = "JSONpair" then
+			if isObject(p.value) then
+				hasOwnProperty = true
+			else
+				hasOwnProperty = true
+			end if
+		else
+			hasOwnProperty = false
+		end if
+	end function
 	
 	' Change the value of a property
 	' Creates the property if it didn't exists
