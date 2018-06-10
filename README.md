@@ -1,4 +1,4 @@
-# JSON object class 3.8.0
+# JSON object class 3.8.1
 ## By RCDMK - rcdmk[at]hotmail[dot]com
 
 ### Licence:
