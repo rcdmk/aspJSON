@@ -697,7 +697,7 @@ class JSONobject
 				out = value
 			
 			case "date"
-				out = """" & year(value) & "-" & padZero(month(value), 2) & "-" & padZero(day(value), 2) & "T" & padZero(hour(value), 2) & ":" & padZero(minute(value), 2) & ":" & padZero(second(value), 2)
+				out = """" & year(value) & "-" & padZero(month(value), 2) & "-" & padZero(day(value), 2) & "T" & padZero(hour(value), 2) & ":" & padZero(minute(value), 2) & ":" & padZero(second(value), 2) & """"
 			
 			case "string", "char", "empty"
 				out = """" & EscapeCharacters(value) & """"
