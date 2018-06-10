@@ -1,5 +1,6 @@
 ﻿<%
 ' JSON object class 3.7.0 May, 29th - 2016
+' https://github.com/rcdmk/aspJSON
 '
 ' Licence:
 ' The MIT License (MIT)
@@ -28,6 +29,7 @@ const JSON_ERROR_PARSE = 1
 const JSON_ERROR_PROPERTY_ALREADY_EXISTS = 2
 const JSON_ERROR_PROPERTY_DOES_NOT_EXISTS = 3 ' DEPRECATED
 const JSON_ERROR_NOT_AN_ARRAY = 4
+const JSON_ERROR_NOT_A_STRING = 5
 const JSON_ERROR_INDEX_OUT_OF_BOUNDS = 9 ' Numbered to have the same error number as the default "Subscript out of range" exeption
 
 class JSONobject
@@ -88,6 +90,8 @@ class JSONobject
 		
 		set i_parent = nothing
 		redim i_properties(-1)
+		
+		vbback = Chr(8)
 	end sub
 	
 	private sub class_terminate()
@@ -97,8 +101,6 @@ class JSONobject
 		next
 		
 		redim i_properties(-1)
-		
-		vbback = Chr(8)
 	end sub
 	
 	
@@ -319,6 +321,24 @@ class JSONobject
 								value = value & vbtab
 							case "b"
 								value = value & vbback
+
+							' escaped chars fix by @IT-Portal
+							case "\"
+								'for \\t we must have \t (not \tab)
+								'here we're resetting prevchar for next iteration
+								value = value & char
+								char = ""
+
+							' escaped unicode syntax by @IT-Portal
+							case "u"
+								'\uxxxx support
+								if IsNumeric("&H" & mid(strJson, i + 1, 4)) then
+									value = value & ChrW("&H" & mid(strJson, i + 1, 4))
+									i = i + 4
+								else
+									value = value & char
+								end if
+							
 							case else
 								value = value & char
 						end select
@@ -657,6 +677,9 @@ class JSONobject
 			if isArray(value) or GetTypeName(value) = "JSONarray" then
 				out = out & serializeArray(value)
 				
+			elseif isObject(value) and GetTypeName(value) = "JSONscript" then
+				out = out & value.Serialize()
+
 			elseif isObject(value) then
 				out = out & serializeObject(value)
 				
@@ -693,7 +716,7 @@ class JSONobject
 				out = value
 			
 			case "date"
-				out = """" & year(value) & "-" & padZero(month(value), 2) & "-" & padZero(day(value), 2) & "T" & padZero(hour(value), 2) & ":" & padZero(minute(value), 2) & ":" & padZero(second(value), 2)
+				out = """" & year(value) & "-" & padZero(month(value), 2) & "-" & padZero(day(value), 2) & "T" & padZero(hour(value), 2) & ":" & padZero(minute(value), 2) & ":" & padZero(second(value), 2) & """"
 			
 			case "string", "char", "empty"
 				out = """" & EscapeCharacters(value) & """"
@@ -1108,6 +1131,44 @@ class JSONarray
 	end function
 	
 	' Writes the serialized array to the response
+	public function Write()
+		Response.Write Serialize()
+	end function
+end class
+
+
+class JSONscript
+	dim i_version
+	dim s_value, s_nullString
+
+	' The value
+	public property get value
+		value = s_value
+	end property
+	
+	public property let value(newValue)
+		if (TypeName(newValue) <> "String") then
+			err.raise JSON_ERROR_NOT_A_STRING, TypeName(me), "The value assigned is not a string."
+		end if
+	
+		if (len(newValue) = 0) then newValue = s_nullString
+		s_value = newValue
+	end property
+	
+	' Constructor and destructor
+	private sub class_initialize()
+		i_version = "1.0.0"
+		
+		s_nullString = "null"
+		s_value = s_nullString
+	end sub
+	
+	' Serializes this object by outputting the raw value
+	public function Serialize()
+		Serialize = s_value
+	end function
+	
+	' Writes the serialized object to the response
 	public function Write()
 		Response.Write Serialize()
 	end function
