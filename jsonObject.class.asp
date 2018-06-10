@@ -857,7 +857,7 @@ class JSONobject
 			i = i + 1
 		loop
 		
-		redim preserve arr(upperBound)
+		redim preserve arr(upperBound - 1)
 		
 		ArraySlice = arr
 	end function
