@@ -321,6 +321,24 @@ class JSONobject
 								value = value & vbtab
 							case "b"
 								value = value & vbback
+
+							' escaped chars fix by @IT-Portal
+							case "\"
+								'for \\t we must have \t (not \tab)
+								'here we're resetting prevchar for next iteration
+								value = value & char
+								char = ""
+
+							' escaped unicode syntax by @IT-Portal
+							case "u"
+								'\uxxxx support
+								if IsNumeric("&H" & mid(strJson, i + 1, 4)) then
+									value = value & ChrW("&H" & mid(strJson, i + 1, 4))
+									i = i + 4
+								else
+									value = value & char
+								end if
+							
 							case else
 								value = value & char
 						end select
