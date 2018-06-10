@@ -1,5 +1,6 @@
 ﻿<%
 ' JSON object class 3.6.2 - May, 29th - 2016
+' https://github.com/rcdmk/aspJSON
 '
 ' Licence:
 ' The MIT License (MIT)
