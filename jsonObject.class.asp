@@ -946,7 +946,7 @@ class JSONarray
 
 	' The class version
 	public property get version
-		items = i_version
+		version = i_version
 	end property
 
 	' The actual array items
