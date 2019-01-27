@@ -110,7 +110,7 @@ JSONarr.Push 1.25 	' Can be numbers
 JSONarr.Push "and strings too"
 
 ' write to page
-JSONarr.Write() ' Gess what? This does the same as the Write method from JSON object
+JSONarr.Write() ' Guess what? This does the same as the Write method from JSON object
 ```	
 	
 To loop arrays you have to access the `items` property of the `JSONarray` object and you can also access the items trough its index:
