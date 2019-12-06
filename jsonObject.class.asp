@@ -895,6 +895,25 @@ class JSONobject
 			add field.name, field.value
 		next
 	end sub
+
+	' Load from a dictionary
+	' @param d as dictionary
+	public sub LoadDictionary(byref d)
+		dim arr, obj, field
+
+		set arr = new JSONArray
+		set obj = new JSONobject
+
+		for each key in d.Keys
+			obj.Add key, d.Item(key)
+		next
+
+		arr.Push obj
+
+		set obj = nothing
+
+		add JSON_ROOT_KEY, arr
+	end sub
 	
 	' Returns the value's type name (usefull for types not supported by VBS)
 	public function GetTypeName(byval value)
