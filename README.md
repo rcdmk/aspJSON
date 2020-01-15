@@ -1,16 +1,16 @@
-# JSON object class 3.8.1
+# JSON object class 3.9.0
 ## By RCDMK - rcdmk[at]hotmail[dot]com
 
 ### Licence:
-MIT license: http://opensource.org/licenses/mit-license.php  
-The MIT License (MIT)  
-Copyright (c) 2016 RCDMK - rcdmk[at]hotmail[dot]com  
+MIT license: http://opensource.org/licenses/mit-license.php
+The MIT License (MIT)
+Copyright (c) 2016 RCDMK - rcdmk[at]hotmail[dot]com
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ### How to use:
 
@@ -65,9 +65,9 @@ jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""arrays"": 
 JSON.Parse(jsonString)
 JSON.Write() ' outputs: '{"strings":"valorTexto","numbers":123.456,"arrays":[1,"2",3.4,[5,6,[7,8]]]}'
 ```
-	
+
 To load records from a database:
-	
+
 ```vb
 ' load records from an ADODB.Recordset
 dim cn, rs
@@ -77,7 +77,7 @@ cn.Open "yourConnectionStringGoesHere"
 set rs = cn.execute("SELECT id, nome, valor FROM pedidos ORDER BY id ASC")
 ' this could also be:
 ' set rs = CreateObject("ADODB.Recordset")
-' rs.Open "SELECT id, nome, valor FROM pedidos ORDER BY id ASC", cn	
+' rs.Open "SELECT id, nome, valor FROM pedidos ORDER BY id ASC", cn
 
 JSON.LoadRecordset rs
 JSONarr.LoadRecordset rs
@@ -90,14 +90,14 @@ set cn = Nothing
 JSON.Write() 		' outputs: {"data":[{"id":1,"nome":"nome 1","valor":10.99},{"id":2,"nome":"nome 2","valor":19.1}]}
 JSONarr.Write() 	' outputs: [{"id":1,"nome":"nome 1","valor":10.99},{"id":2,"nome":"nome 2","valor":19.1}]
 ```
-	
+
 To change the default property name ("data") when loading arrays and recordsets, use the `defaultPropertyName` property:
-	
+
 ```vb
 JSON.defaultPropertyName = "CustomName"
 JSON.Write() 		' outputs: {"CustomName":[{"id":1,"nome":"nome 1","valor":10.99},{"id":2,"nome":"nome 2","valor":19.1}]}
 ```
-	
+
 If you want to use arrays, I have something for you too
 
 ```vb
@@ -111,8 +111,8 @@ JSONarr.Push "and strings too"
 
 ' write to page
 JSONarr.Write() ' Gess what? This does the same as the Write method from JSON object
-```	
-	
+```
+
 To loop arrays you have to access the `items` property of the `JSONarray` object and you can also access the items trough its index:
 
 ```vb
@@ -126,7 +126,7 @@ for each item in JSONarr.items
 	else
 		response.write item
 	end if
-	
+
 	response.write "<br>"
 next
 
@@ -135,7 +135,7 @@ next
 for i = 0 to JSONarr.length - 1
 	if isObject(JSONarr(i)) then
 		set item = JSONarr(i)
-		
+
 		if typeName(item) = "JSONobject" then
 			item.write()
 		else
@@ -145,7 +145,7 @@ for i = 0 to JSONarr.length - 1
 		item = JSONarr(i)
 		response.write item
 	end if
-	
+
 	response.write "<br>"
 next
 ```
