@@ -102,7 +102,7 @@ If you want to use arrays, I have something for you too
 
 ```vb
 ' instantiate the class
-Dim JSONarr = New JSONarray
+set JSONarr = New JSONarray
 
 ' add something to the array
 JSONarr.Push JSON 	' Can be JSON objects, and even JSON arrays
