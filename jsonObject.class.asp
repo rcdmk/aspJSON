@@ -965,6 +965,8 @@ class JSONarray
 	public property let items(value)
 		if isArray(value) then
 			i_items = value
+			i_items_count = ubound(value) + 1
+			i_items_capacity = i_items_count
 		else
 			err.raise JSON_ERROR_NOT_AN_ARRAY, TypeName(me), "The value assigned is not an array."
 		end if
