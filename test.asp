@@ -57,7 +57,12 @@ Response.LCID = 1046 ' Brazilian LCID (use your locale code here).
 		
 		if testLoadArray then jsonString = "[" & jsonString & "]"
 		
+		dim start
+		start = timer()
 		set outputObj = jsonObj.parse(jsonString)
+
+		response.Write "Load time: " & cstr(timer() - start) & " s<br>"
+		response.end
 		%>
 		<h3>Parse Input</h3>
 		<pre><%= jsonString %></pre>

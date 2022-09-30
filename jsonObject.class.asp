@@ -948,6 +948,7 @@ end class
 ' Represents an array of JSON objects and values
 class JSONarray
 	dim i_items, i_depth, i_parent, i_version, i_defaultPropertyName
+	dim i_items_count, i_items_capacity
 
 	' The class version
 	public property get version
@@ -969,7 +970,7 @@ class JSONarray
 	
 	' The length of the array
 	public property get length
-		length = ubound(i_items) + 1
+		length = i_items_count
 	end property
 	
 	' The depth of the array in the chain (starting with 1)
@@ -1004,6 +1005,8 @@ class JSONarray
 		i_version = "2.3.5"
 		i_defaultPropertyName = JSON_DEFAULT_PROPERTY_NAME
 		redim i_items(-1)
+		i_items_count = 0
+		i_items_capacity = 0
 		i_depth = 0
 	end sub
 	
@@ -1036,20 +1039,18 @@ class JSONarray
 	
 	' Adds a value to the array
 	public sub Push(byref value)
-		dim js, instantiated
-		
-		if typeName(i_parent) = "JSONobject" then
-			set js = i_parent
-			i_defaultPropertyName = i_parent.defaultPropertyName
+		if i_items_count >= i_items_capacity then
+			redim preserve i_items(i_items_capacity * 1.2 + 1)
+			i_items_capacity = ubound(i_items) + 1
+		end if
+
+		if isobject(value) then
+			set i_items(i_items_count) = value
 		else
-			set js = new JSONobject
-			js.defaultPropertyName = i_defaultPropertyName
-			instantiated = true
+			i_items(i_items_count) = value
 		end if
 		
-		js.ArrayPush i_items, value
-		
-		if instantiated then set js = nothing
+		i_items_count = i_items_count + 1
 	end sub
 	
 	' Load properties from a ADO RecordSet object
