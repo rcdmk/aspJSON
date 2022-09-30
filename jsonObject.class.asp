@@ -954,7 +954,12 @@ class JSONarray
 
 	' The actual array items
 	public property get items
-		items = i_items
+		dim tmp
+		tmp = i_items
+		if i_items_count < i_items_capacity then
+			redim preserve tmp(i_items_count - 1)
+		end if
+		items = tmp
 	end property
 	
 	public property let items(value)
