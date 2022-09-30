@@ -390,10 +390,7 @@ class JSONobject
 						
 						' else, we add it to the array
 						if useArray then
-							tmpArray = currentArray.items
-							ArrayPush tmpArray, value
-							
-							currentArray.items = tmpArray
+							currentArray.Push value
 							
 							log("Value added to array: """ & key & """: " & value)
 						end if
