@@ -904,7 +904,12 @@ class JSONobject
 			valueType = TypeName(value)
 			
 			if err.number <> 0 then
-				if varType(value) = 14 then valueType = "Decimal"
+				select case varType(value)
+					case 14 ' MySQL Decimal
+						valueType = "Decimal"
+					case 16 ' MySQL TinyInt
+						valueType = "Integer"
+				end select
 			end if
 		on error goto 0
 		
