@@ -972,6 +972,11 @@ class JSONarray
 		end if
 	end property
 	
+	' The capacity of the underlying array
+	public property get capacity
+		capacity = i_items_capacity
+	end property
+	
 	' The length of the array
 	public property get length
 		length = i_items_count
