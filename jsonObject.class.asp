@@ -883,7 +883,7 @@ class JSONobject
 		
 		set obj = nothing
 		
-		add JSON_ROOT_KEY, arr
+		change i_defaultPropertyName, arr
 	end sub
 	
 	' Load properties from the first record of an ADO RecordSet object
