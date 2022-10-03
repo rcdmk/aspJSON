@@ -68,7 +68,12 @@ class JSONobject
 		i_depth = i_parent.depth + 1
 	end property
 	
-	
+
+	' The class version
+	public property get version
+		version = i_version
+	end property
+
 
 	' Constructor and destructor
 	private sub class_initialize()
