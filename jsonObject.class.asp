@@ -613,7 +613,7 @@ class JSONobject
 		found = false		
 		
 		i = 0
-
+		
 		do while i < i_properties_count
 			set p = i_properties(i)
 			
@@ -627,7 +627,13 @@ class JSONobject
 			i = i + 1
 		loop
 		
-		if not found then i = -1
+		if not found then
+			if prop = i_defaultPropertyName then
+				i = getProperty(JSON_ROOT_KEY, outProp)
+			else
+				i = -1
+			end if
+		end if
 		
 		getProperty = i
 	end function
