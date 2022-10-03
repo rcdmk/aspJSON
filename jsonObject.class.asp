@@ -18,6 +18,7 @@ const JSON_ERROR_INDEX_OUT_OF_BOUNDS = 9 ' Numbered to have the same error numbe
 class JSONobject
 	dim i_debug, i_depth, i_parent
 	dim i_properties, i_version, i_defaultPropertyName
+	dim i_properties_count, i_properties_capacity
 	private vbback
 	
 	' Set to true to show the internals of the parsing mecanism
@@ -48,7 +49,12 @@ class JSONobject
 	
 	' The property pairs ("name": "value" - pairs)
 	public property get pairs
-		pairs = i_properties
+		dim tmp
+		tmp = i_properties
+		if i_properties_count < i_properties_capacity then
+			redim preserve tmp(i_properties_count - 1)
+		end if
+		pairs = tmp
 	end property
 	
 	
@@ -73,6 +79,8 @@ class JSONobject
 		
 		set i_parent = nothing
 		redim i_properties(-1)
+		i_properties_capacity = 0
+		i_properties_count = 0
 		
 		vbback = Chr(8)
 	end sub
@@ -131,7 +139,11 @@ class JSONobject
 				log("Enter init")
 				
 				' if we are in root, clear previous object properties
-				if key = JSON_ROOT_KEY and TypeName(currentArray) <> "JSONarray" then redim i_properties(-1)
+				if key = JSON_ROOT_KEY and TypeName(currentArray) <> "JSONarray" then
+					redim i_properties(-1)
+					i_properties_capacity = 0
+					i_properties_count = 0
+				end if
 				
 				' Init object
 				if char = "{" then
@@ -528,7 +540,13 @@ class JSONobject
 				item.value = obj
 			end if
 
-			ArrayPush i_properties, item
+			if i_properties_count >= i_properties_capacity then
+				redim preserve i_properties(i_properties_capacity * 1.2 + 1)
+				i_properties_capacity = ubound(i_properties) + 1
+			end if
+
+			set i_properties(i_properties_count) = item
+			i_properties_count = i_properties_count + 1
 		end if
 	end sub
 	
@@ -538,7 +556,11 @@ class JSONobject
 		i = getProperty(prop, p)
 		
 		' property exists
-		if i > -1 then ArraySlice i_properties, i
+		if i > -1 then
+			ArraySlice i_properties, i
+			i_properties_capacity = ubound(i_properties) + 1
+			i_properties_count = i_properties_count - 1
+		end if
 	end sub
 	
 	' Return the value of a property by its key
@@ -591,7 +613,7 @@ class JSONobject
 		
 		i = 0
 
-		do while i <= ubound(i_properties)
+		do while i < i_properties_count
 			set p = i_properties(i)
 			
 			if p.name = prop then
