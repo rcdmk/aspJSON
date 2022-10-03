@@ -678,9 +678,9 @@ class JSONobject
 			end if
 			
 			if prop.name = JSON_ROOT_KEY then
-				out = out & """" & obj.defaultPropertyName & """:"
+				out = out & ("""" & obj.defaultPropertyName & """:")
 			else
-				out = out & """" & prop.name & """:"
+				out = out & ("""" & prop.name & """:")
 			end if
 			
 			if isArray(value) or GetTypeName(value) = "JSONarray" then
