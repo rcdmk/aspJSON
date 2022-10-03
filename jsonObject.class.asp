@@ -872,7 +872,9 @@ class JSONobject
 		upperBound = ubound(arr)
 		
 		do while i < upperBound
-			if isObject(arr(i)) then
+			if isObject(arr(i)) then set arr(i) = nothing
+
+			if isObject(arr(i + 1)) then
 				set arr(i) = arr(i + 1)
 			else
 				arr(i) = arr(i + 1)
