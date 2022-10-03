@@ -854,7 +854,7 @@ class JSONobject
 		NumDimensions = dimensions - 1
 	End Function
 	
-	' Pushes (adds) a value to an array, expanding it
+	' DEPRECATED: Pushes (adds) a value to an array, expanding it
 	public function ArrayPush(byref arr, byref value)
 		redim preserve arr(ubound(arr) + 1)
 		
