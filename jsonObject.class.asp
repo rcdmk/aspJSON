@@ -103,7 +103,7 @@ class JSONobject
 	' Parse a JSON string and populate the object
 	public function parse(byval strJson)
 		dim regex, i, size, char, prevchar, quoted
-		dim mode, item, key, value, openArray, openObject
+		dim mode, item, key, keyStart, value, openArray, openObject
 		dim actualLCID, tmpArray, tmpObj, addedToArray
 		dim root, currentObject, currentArray
 		
@@ -227,6 +227,7 @@ class JSONobject
 				key = ""
 				if char = """" then
 					log("Open key")
+					keyStart = i + 1
 					mode = "closeKey"
 				elseif char = "}" then ' empty objects
 					log("Empty object")
@@ -238,10 +239,9 @@ class JSONobject
 			elseif mode = "closeKey" then
 				' If it finds a non scaped quotation, change to value mode
 				if char = """" and prevchar <> "\" then
+					key = mid(strJson, keyStart, i - keyStart)
 					log("Close key: """ & key & """")
 					mode = "preValue"
-				else
-					key = key & char
 				end if
 			
 			' Wait until a colon char (:) to begin the value
