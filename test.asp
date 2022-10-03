@@ -2,6 +2,7 @@
 Option Explicit
 Response.LCID = 1046 ' Brazilian LCID (use your locale code here).
 ' Could also be the LCID property of the page declaration or Session.LCID to set it to the entire session.
+response.buffer = true
 %>
 <!--#include file="jsonObject.class.asp" -->
 <!DOCTYPE html>
@@ -61,12 +62,19 @@ Response.LCID = 1046 ' Brazilian LCID (use your locale code here).
 		start = timer()
 		set outputObj = jsonObj.parse(jsonString)
 
-		response.Write "Load time: " & cstr(timer() - start) & " s<br>"
-		response.end
+		if testLoadArray and left(jsonString, 1) <> "[" then jsonString = "[" & jsonString & "]"
 		%>
 		<h3>Parse Input</h3>
 		<pre><%= jsonString %></pre>
 		<%
+		response.flush
+
+		dim start
+		start = timer()
+		set outputObj = jsonObj.parse(jsonString)
+		if testLoadArray then set jsonArr = outputObj
+
+		response.Write "Load time: " & (timer() - start) & " s<br>"
 	end if
 	
 	if testAdd then
@@ -110,13 +118,23 @@ Response.LCID = 1046 ' Brazilian LCID (use your locale code here).
 		jsonObj.remove "aNonExistantPropertyName" ' this sould run silently, even to non existant properties
 	end if
 	
+	if testChangeDefaultPropertyName then
+		jsonObj.defaultPropertyName = "CustomName"
+		jsonArr.defaultPropertyName = "CustomArrName"
+	end if
+	
 	if testValue then
 		%><h3>Get Values</h3><%
 		response.write "nome: " & jsonObj.value("nome") & "<br>"
 		response.write "idade: " & jsonObj("idade") & "<br>" ' short syntax
 		response.write "non existant property:" & jsonObj("aNonExistantPropertyName") & "(" & typeName(jsonObj("aNonExistantPropertyName")) & ")<br>"
-	end if
-	
+		
+		if isObject(jsonObj(jsonObj.defaultPropertyName)) then
+			response.write "default property name (" & jsonObj.defaultPropertyName & "): <pre>" & jsonObj(jsonObj.defaultPropertyName).Serialize() & "</pre>"
+		else
+			response.write "default property name (" & jsonObj.defaultPropertyName & "):" & jsonObj(jsonObj.defaultPropertyName) & "<br>"
+		end if
+	end if	
 	
 	if testChange then
 		%><h3>Change Values</h3><%
@@ -133,7 +151,12 @@ Response.LCID = 1046 ' Brazilian LCID (use your locale code here).
 	end if
 	
 	if testArrayPush then
-		jsonArr.Push jsonObj
+		dim newJson
+		set newJson = new JSONobject
+		newJson.add "newJson", "property"
+		newJson.add "version", newJson.version
+
+		jsonArr.Push newJson
 		jsonArr.Push 1
 		jsonArr.Push "strings too"
 	end if
@@ -188,24 +211,31 @@ Response.LCID = 1046 ' Brazilian LCID (use your locale code here).
 	end if	
 	
 	if testLoad then
+		start = timer()
 		%>
 		<h3>Parse Output</h3>
 		<pre><%= outputObj.write %></pre>
 		<%
-	end if
-	
-	if testChangeDefaultPropertyName then
-		jsonObj.defaultPropertyName = "CustomName"
-		jsonArr.defaultPropertyName = "CustomArrName"
+		response.write timer() - start
+		response.write " s<br>"
+		response.flush
 	end if
 	%>
 	
 	<h3>JSON Object Output<% if testLoad then %> (Same as parse output: <% if typeName(jsonObj) = typeName(outputObj) then %>yes<% else %>no<% end if %>)<% end if %></h3>
-	<pre><%= jsonObj.write %></pre>	
-	
-	<h3>Array Output</h3>
-	<pre><%= jsonArr.write %></pre>
-	
+	<%
+	jsonString = jsonObj.Serialize()
+	%>
+	<pre><%= left(jsonString, 2000) %><% if len(jsonString) > 2000 then %>... (too long, truncated)<% end if %></pre>	
+	<% response.flush %>
+
+	<h3>Array Output<% if testLoad then %> (Same as parse output: <% if typeName(jsonArr) = typeName(outputObj) then %>yes<% else %>no<% end if %>)<% end if %></h3>
+	<%
+	jsonString = jsonArr.Serialize()
+	%>
+	<pre><%= left(jsonString, 2000) %><% if len(jsonString) > 2000 then %>... (too long, truncated)<% end if %></pre>	
+	<% response.flush %>
+
 	<h3>Array Loop</h3>
 	<pre><%
 	dim i, items, item
@@ -214,7 +244,7 @@ Response.LCID = 1046 ' Brazilian LCID (use your locale code here).
 	' more readable loop
 	i = 0
 	response.write "For Each Loop (readability):<br>==============<br>"
-	
+	start = timer()
 	for each item in jsonArr.items
 		response.write "Index "
 		response.write i
@@ -228,10 +258,14 @@ Response.LCID = 1046 ' Brazilian LCID (use your locale code here).
 		
 		response.write "<br>"
 		i = i + 1
+		if i mod 100 = 0 then response.flush
 	next
-	
+	response.write timer() - start
+	response.write " s<br>"
+
 	response.write "<br><br>For Loop (speed):<br>=========<br>"
-	
+	start = timer()
+
 	' faster but less readable
 	for i = 0 to jsonArr.length - 1
 		response.write "Index "
@@ -252,9 +286,12 @@ Response.LCID = 1046 ' Brazilian LCID (use your locale code here).
 		end if
 		
 		response.write "<br>"
+		if i mod 100 = 0 then response.flush
 	next
+	response.write timer() - start
+	response.write " s<br>"
 
-	
+	set newJson = nothing
 	set outputObj = nothing
 	set jsonObj = nothing
 	set jsonArr = nothing
@@ -263,7 +300,6 @@ Response.LCID = 1046 ' Brazilian LCID (use your locale code here).
 	<h3>JSON Script Output</h3>
 	
 	<%
-	
 	dim realOutput
 	dim expectedOutput
 	
