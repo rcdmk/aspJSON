@@ -561,11 +561,7 @@ class JSONobject
 		i = getProperty(prop, p)
 		
 		' property exists
-		if i > -1 then
-			ArraySlice i_properties, i
-			i_properties_capacity = ubound(i_properties) + 1
-			i_properties_count = i_properties_count - 1
-		end if
+		if i > -1 then ArraySlice i_properties, i
 	end sub
 	
 	' Return the value of a property by its key
@@ -867,11 +863,10 @@ class JSONobject
 	
 	' Removes a value from an array
 	private function ArraySlice(byref arr, byref index)
-		dim i, upperBound
+		dim i
 		i = index
-		upperBound = ubound(arr)
 		
-		do while i < upperBound
+		for i = index to i_properties_count - 2
 			if isObject(arr(i)) then set arr(i) = nothing
 
 			if isObject(arr(i + 1)) then
@@ -879,11 +874,14 @@ class JSONobject
 			else
 				arr(i) = arr(i + 1)
 			end if
-			
-			i = i + 1
-		loop
+		next
 		
-		redim preserve arr(upperBound - 1)
+		i_properties_count = i_properties_count - 1
+
+		if i_properties_count < i_properties_capacity / 2 then
+			redim preserve arr(i_properties_count * 1.2 + 1)
+			i_properties_capacity = ubound(i_properties) + 1
+		end if
 		
 		ArraySlice = arr
 	end function
