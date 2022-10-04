@@ -7,6 +7,7 @@
 const JSON_ROOT_KEY = "[[JSONroot]]"
 const JSON_DEFAULT_PROPERTY_NAME = "data"
 const JSON_SPECIAL_VALUES_REGEX = "^(?:(?:t(?:r(?:ue?)?)?)|(?:f(?:a(?:l(?:se?)?)?)?)|(?:n(?:u(?:ll?)?)?)|(?:u(?:n(?:d(?:e(?:f(?:i(?:n(?:ed?)?)?)?)?)?)?)?))$"
+const JSON_UNICODE_CHARS_REGEX = "\\u(\d{4})"
 
 const JSON_ERROR_PARSE = 1
 const JSON_ERROR_PROPERTY_ALREADY_EXISTS = 2
@@ -266,6 +267,7 @@ class JSONobject
 				elseif char = """" then
 					log("Open string value")
 					quoted = true
+					keyStart = i + 1
 					mode = "closeValue"
 				
 				' If it begins with open square bracket ([), its an array
@@ -307,43 +309,24 @@ class JSONobject
 			elseif mode = "closeValue" then
 				if quoted then
 					if char = """" and prevchar <> "\" then
+						value = mid(strJson, keyStart, i - keyStart)
+
+						value = replace(value, "\n", vblf)
+						value = replace(value, "\r", vbcr)
+						value = replace(value, "\t", vbtab)
+						value = replace(value, "\b", vbback)
+						value = replace(value, "\\", "\")
+
+						regex.pattern = JSON_UNICODE_CHARS_REGEX
+						if regex.test(value) then
+							dim match
+							for each match in regex.Execute(value)
+								value = replace(value, match.value, ChrW("&H" & match.SubMatches(0)))
+							next
+						end if
+
 						log("Close string value: """ & value & """")
 						mode = "addValue"
-						
-					' special and escaped chars
-					elseif prevchar = "\" then
-						select case char
-							case "n"
-								value = value & vblf
-							case "r"
-								value = value & vbcr
-							case "t"
-								value = value & vbtab
-							case "b"
-								value = value & vbback
-
-							' escaped chars fix by @IT-Portal
-							case "\"
-								'for \\t we must have \t (not \tab)
-								'here we're resetting prevchar for next iteration
-								value = value & char
-								char = ""
-
-							' escaped unicode syntax by @IT-Portal
-							case "u"
-								'\uxxxx support
-								if IsNumeric("&H" & mid(strJson, i + 1, 4)) then
-									value = value & ChrW("&H" & mid(strJson, i + 1, 4))
-									i = i + 4
-								else
-									value = value & char
-								end if
-							
-							case else
-								value = value & char
-						end select
-					elseif char <> "\" then
-						value = value & char
 					end if
 				else
 					' possible boolean and null values
