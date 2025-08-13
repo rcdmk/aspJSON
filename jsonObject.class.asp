@@ -1,5 +1,5 @@
 ﻿<%
-' JSON object class 3.8.1 May, 29th - 2016
+' JSON object class 3.9.0 Aug, 13th - 2025
 ' https://github.com/rcdmk/aspJSON
 '
 ' License MIT - see LICENCE.txt for details
@@ -78,7 +78,7 @@ class JSONobject
 
 	' Constructor and destructor
 	private sub class_initialize()
-		i_version = "3.8.1"
+		i_version = "3.9.0"
 		i_depth = 0
 		i_debug = false
 		i_defaultPropertyName = JSON_DEFAULT_PROPERTY_NAME
@@ -1027,7 +1027,7 @@ class JSONarray
 	
 	' Constructor and destructor
 	private sub class_initialize
-		i_version = "2.3.5"
+		i_version = "2.4.0"
 		i_defaultPropertyName = JSON_DEFAULT_PROPERTY_NAME
 		redim i_items(-1)
 		i_items_count = 0
