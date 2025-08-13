@@ -1,12 +1,13 @@
 ﻿<%
-' JSON object class 3.8.1 May, 29th - 2016
+' JSON object class 3.9.0 Aug, 13th - 2025
 ' https://github.com/rcdmk/aspJSON
 '
 ' License MIT - see LICENCE.txt for details
 
 const JSON_ROOT_KEY = "[[JSONroot]]"
 const JSON_DEFAULT_PROPERTY_NAME = "data"
-const JSON_SPECIAL_VALUES_REGEX = "^(?:(?:t(?:r(?:ue?)?)?)|(?:f(?:a(?:l(?:se?)?)?)?)|(?:n(?:u(?:ll?)?))|(?:u(?:n(?:d(?:e(?:f(?:i(?:n(?:ed?)?)?)?)?)?)?)?))$"
+const JSON_SPECIAL_VALUES_REGEX = "^(?:(?:t(?:r(?:ue?)?)?)|(?:f(?:a(?:l(?:se?)?)?)?)|(?:n(?:u(?:ll?)?)?)|(?:u(?:n(?:d(?:e(?:f(?:i(?:n(?:ed?)?)?)?)?)?)?)?))$"
+const JSON_UNICODE_CHARS_REGEX = "\\u(\d{4})"
 
 const JSON_ERROR_PARSE = 1
 const JSON_ERROR_PROPERTY_ALREADY_EXISTS = 2
@@ -18,6 +19,7 @@ const JSON_ERROR_INDEX_OUT_OF_BOUNDS = 9 ' Numbered to have the same error numbe
 class JSONobject
 	dim i_debug, i_depth, i_parent
 	dim i_properties, i_version, i_defaultPropertyName
+	dim i_properties_count, i_properties_capacity
 	private vbback
 	
 	' Set to true to show the internals of the parsing mecanism
@@ -48,7 +50,12 @@ class JSONobject
 	
 	' The property pairs ("name": "value" - pairs)
 	public property get pairs
-		pairs = i_properties
+		dim tmp
+		tmp = i_properties
+		if i_properties_count < i_properties_capacity then
+			redim preserve tmp(i_properties_count - 1)
+		end if
+		pairs = tmp
 	end property
 	
 	
@@ -62,17 +69,24 @@ class JSONobject
 		i_depth = i_parent.depth + 1
 	end property
 	
-	
+
+	' The class version
+	public property get version
+		version = i_version
+	end property
+
 
 	' Constructor and destructor
 	private sub class_initialize()
-		i_version = "3.8.1"
+		i_version = "3.9.0"
 		i_depth = 0
 		i_debug = false
 		i_defaultPropertyName = JSON_DEFAULT_PROPERTY_NAME
 		
 		set i_parent = nothing
 		redim i_properties(-1)
+		i_properties_capacity = 0
+		i_properties_count = 0
 		
 		vbback = Chr(8)
 	end sub
@@ -90,7 +104,7 @@ class JSONobject
 	' Parse a JSON string and populate the object
 	public function parse(byval strJson)
 		dim regex, i, size, char, prevchar, quoted
-		dim mode, item, key, value, openArray, openObject
+		dim mode, item, key, keyStart, value, openArray, openObject
 		dim actualLCID, tmpArray, tmpObj, addedToArray
 		dim root, currentObject, currentArray
 		
@@ -131,7 +145,11 @@ class JSONobject
 				log("Enter init")
 				
 				' if we are in root, clear previous object properties
-				if key = JSON_ROOT_KEY and TypeName(currentArray) <> "JSONarray" then redim i_properties(-1)
+				if key = JSON_ROOT_KEY and TypeName(currentArray) <> "JSONarray" then
+					redim i_properties(-1)
+					i_properties_capacity = 0
+					i_properties_count = 0
+				end if
 				
 				' Init object
 				if char = "{" then
@@ -210,6 +228,7 @@ class JSONobject
 				key = ""
 				if char = """" then
 					log("Open key")
+					keyStart = i + 1
 					mode = "closeKey"
 				elseif char = "}" then ' empty objects
 					log("Empty object")
@@ -221,10 +240,9 @@ class JSONobject
 			elseif mode = "closeKey" then
 				' If it finds a non scaped quotation, change to value mode
 				if char = """" and prevchar <> "\" then
+					key = mid(strJson, keyStart, i - keyStart)
 					log("Close key: """ & key & """")
 					mode = "preValue"
-				else
-					key = key & char
 				end if
 			
 			' Wait until a colon char (:) to begin the value
@@ -249,6 +267,7 @@ class JSONobject
 				elseif char = """" then
 					log("Open string value")
 					quoted = true
+					keyStart = i + 1
 					mode = "closeValue"
 				
 				' If it begins with open square bracket ([), its an array
@@ -290,43 +309,24 @@ class JSONobject
 			elseif mode = "closeValue" then
 				if quoted then
 					if char = """" and prevchar <> "\" then
+						value = mid(strJson, keyStart, i - keyStart)
+
+						value = replace(value, "\n", vblf)
+						value = replace(value, "\r", vbcr)
+						value = replace(value, "\t", vbtab)
+						value = replace(value, "\b", vbback)
+						value = replace(value, "\\", "\")
+
+						regex.pattern = JSON_UNICODE_CHARS_REGEX
+						if regex.test(value) then
+							dim match
+							for each match in regex.Execute(value)
+								value = replace(value, match.value, ChrW("&H" & match.SubMatches(0)))
+							next
+						end if
+
 						log("Close string value: """ & value & """")
 						mode = "addValue"
-						
-					' special and escaped chars
-					elseif prevchar = "\" then
-						select case char
-							case "n"
-								value = value & vblf
-							case "r"
-								value = value & vbcr
-							case "t"
-								value = value & vbtab
-							case "b"
-								value = value & vbback
-
-							' escaped chars fix by @IT-Portal
-							case "\"
-								'for \\t we must have \t (not \tab)
-								'here we're resetting prevchar for next iteration
-								value = value & char
-								char = ""
-
-							' escaped unicode syntax by @IT-Portal
-							case "u"
-								'\uxxxx support
-								if IsNumeric("&H" & mid(strJson, i + 1, 4)) then
-									value = value & ChrW("&H" & mid(strJson, i + 1, 4))
-									i = i + 4
-								else
-									value = value & char
-								end if
-							
-							case else
-								value = value & char
-						end select
-					elseif char <> "\" then
-						value = value & char
 					end if
 				else
 					' possible boolean and null values
@@ -390,10 +390,7 @@ class JSONobject
 						
 						' else, we add it to the array
 						if useArray then
-							tmpArray = currentArray.items
-							ArrayPush tmpArray, value
-							
-							currentArray.items = tmpArray
+							currentArray.Push value
 							
 							log("Value added to array: """ & key & """: " & value)
 						end if
@@ -531,7 +528,13 @@ class JSONobject
 				item.value = obj
 			end if
 
-			ArrayPush i_properties, item
+			if i_properties_count >= i_properties_capacity then
+				redim preserve i_properties(i_properties_capacity * 1.2 + 1)
+				i_properties_capacity = ubound(i_properties) + 1
+			end if
+
+			set i_properties(i_properties_count) = item
+			i_properties_count = i_properties_count + 1
 		end if
 	end sub
 	
@@ -593,8 +596,8 @@ class JSONobject
 		found = false		
 		
 		i = 0
-
-		do while i <= ubound(i_properties)
+		
+		do while i < i_properties_count
 			set p = i_properties(i)
 			
 			if p.name = prop then
@@ -607,7 +610,13 @@ class JSONobject
 			i = i + 1
 		loop
 		
-		if not found then i = -1
+		if not found then
+			if prop = i_defaultPropertyName then
+				i = getProperty(JSON_ROOT_KEY, outProp)
+			else
+				i = -1
+			end if
+		end if
 		
 		getProperty = i
 	end function
@@ -652,9 +661,9 @@ class JSONobject
 			end if
 			
 			if prop.name = JSON_ROOT_KEY then
-				out = out & """" & obj.defaultPropertyName & """:"
+				out = out & ("""" & obj.defaultPropertyName & """:")
 			else
-				out = out & """" & prop.name & """:"
+				out = out & ("""" & prop.name & """:")
 			end if
 			
 			if isArray(value) or GetTypeName(value) = "JSONarray" then
@@ -828,7 +837,7 @@ class JSONobject
 		NumDimensions = dimensions - 1
 	End Function
 	
-	' Pushes (adds) a value to an array, expanding it
+	' DEPRECATED: Pushes (adds) a value to an array, expanding it
 	public function ArrayPush(byref arr, byref value)
 		redim preserve arr(ubound(arr) + 1)
 		
@@ -843,21 +852,25 @@ class JSONobject
 	
 	' Removes a value from an array
 	private function ArraySlice(byref arr, byref index)
-		dim i, upperBound
+		dim i
 		i = index
-		upperBound = ubound(arr)
 		
-		do while i < upperBound
-			if isObject(arr(i)) then
+		for i = index to i_properties_count - 2
+			if isObject(arr(i)) then set arr(i) = nothing
+
+			if isObject(arr(i + 1)) then
 				set arr(i) = arr(i + 1)
 			else
 				arr(i) = arr(i + 1)
 			end if
-			
-			i = i + 1
-		loop
+		next
 		
-		redim preserve arr(upperBound - 1)
+		i_properties_count = i_properties_count - 1
+
+		if i_properties_count < i_properties_capacity / 2 then
+			redim preserve arr(i_properties_count * 1.2 + 1)
+			i_properties_capacity = ubound(i_properties) + 1
+		end if
 		
 		ArraySlice = arr
 	end function
@@ -883,7 +896,7 @@ class JSONobject
 		
 		set obj = nothing
 		
-		add JSON_ROOT_KEY, arr
+		change i_defaultPropertyName, arr
 	end sub
 	
 	' Load properties from the first record of an ADO RecordSet object
@@ -904,7 +917,12 @@ class JSONobject
 			valueType = TypeName(value)
 			
 			if err.number <> 0 then
-				if varType(value) = 14 then valueType = "Decimal"
+				select case varType(value)
+					case 14 ' MySQL Decimal
+						valueType = "Decimal"
+					case 16 ' MySQL TinyInt
+						valueType = "Integer"
+				end select
 			end if
 		on error goto 0
 		
@@ -943,6 +961,7 @@ end class
 ' Represents an array of JSON objects and values
 class JSONarray
 	dim i_items, i_depth, i_parent, i_version, i_defaultPropertyName
+	dim i_items_count, i_items_capacity
 
 	' The class version
 	public property get version
@@ -951,20 +970,32 @@ class JSONarray
 
 	' The actual array items
 	public property get items
-		items = i_items
+		dim tmp
+		tmp = i_items
+		if i_items_count < i_items_capacity then
+			redim preserve tmp(i_items_count - 1)
+		end if
+		items = tmp
 	end property
 	
 	public property let items(value)
 		if isArray(value) then
 			i_items = value
+			i_items_count = ubound(value) + 1
+			i_items_capacity = i_items_count
 		else
 			err.raise JSON_ERROR_NOT_AN_ARRAY, TypeName(me), "The value assigned is not an array."
 		end if
 	end property
 	
+	' The capacity of the underlying array
+	public property get capacity
+		capacity = i_items_capacity
+	end property
+	
 	' The length of the array
 	public property get length
-		length = ubound(i_items) + 1
+		length = i_items_count
 	end property
 	
 	' The depth of the array in the chain (starting with 1)
@@ -996,9 +1027,11 @@ class JSONarray
 	
 	' Constructor and destructor
 	private sub class_initialize
-		i_version = "2.3.5"
+		i_version = "2.4.0"
 		i_defaultPropertyName = JSON_DEFAULT_PROPERTY_NAME
 		redim i_items(-1)
+		i_items_count = 0
+		i_items_capacity = 0
 		i_depth = 0
 	end sub
 	
@@ -1031,20 +1064,18 @@ class JSONarray
 	
 	' Adds a value to the array
 	public sub Push(byref value)
-		dim js, instantiated
-		
-		if typeName(i_parent) = "JSONobject" then
-			set js = i_parent
-			i_defaultPropertyName = i_parent.defaultPropertyName
+		if i_items_count >= i_items_capacity then
+			redim preserve i_items(i_items_capacity * 1.2 + 1)
+			i_items_capacity = ubound(i_items) + 1
+		end if
+
+		if isobject(value) then
+			set i_items(i_items_count) = value
 		else
-			set js = new JSONobject
-			js.defaultPropertyName = i_defaultPropertyName
-			instantiated = true
+			i_items(i_items_count) = value
 		end if
 		
-		js.ArrayPush i_items, value
-		
-		if instantiated then set js = nothing
+		i_items_count = i_items_count + 1
 	end sub
 	
 	' Load properties from a ADO RecordSet object
