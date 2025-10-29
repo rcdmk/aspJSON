@@ -69,7 +69,6 @@ response.buffer = true
 		<%
 		response.flush
 
-		dim start
 		start = timer()
 		set outputObj = jsonObj.parse(jsonString)
 		if testLoadArray then set jsonArr = outputObj
@@ -102,7 +101,7 @@ response.buffer = true
 		jsonObj.add "idade", 25
 		jsonObj.add "saldo", -52
 		jsonObj.add "bio", "Nascido em São Paulo\Brasil" & vbcrlf & "Sem filhos" & vbcrlf & vbtab & "Jogador de WoW"
-		jsonObj.add "data", now
+		jsonObj.add "data-atual", now
 		jsonObj.add "lista", arr
 		jsonObj.add "lista2", multArr
 		
