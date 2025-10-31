@@ -33,7 +33,7 @@ response.buffer = true
 	server.ScriptTimeout = 10
 	dim jsonObj, jsonString, jsonArr, outputObj, start
 	dim testLoad, testAdd, testRemove, testValue, testChange, testArrayPush, testLoadRecordset
-	dim testLoadArray, testChangeDefaultPropertyName, testGetItemAt
+	dim testLoadArray, testChangeDefaultPropertyName, testLowercaseKeys
 	
 	testLoad = true
 	testLoadArray = true
@@ -98,8 +98,8 @@ response.buffer = true
 		multArr(2, 1) = "2,1"
 		multArr(2, 2) = "2,2"
 		multArr(2, 3) = "2,3"
-		
-		jsonObj.add "nome", "Jozé"
+
+		jsonObj.add "nome", "José"
 		jsonObj.add "ficticio", true
 		jsonObj.add "idade", 25
 		jsonObj.add "saldo", -52
@@ -124,7 +124,9 @@ response.buffer = true
 		jsonObj.defaultPropertyName = "CustomName"
 		jsonArr.defaultPropertyName = "CustomArrName"
 	end if
+
 	
+
 	if testValue then
 		%><h3>Get Values</h3><%
 		response.write "nome: " & jsonObj.value("nome") & "<br>"
@@ -176,14 +178,14 @@ response.buffer = true
 		dim rs
 		set rs = createObject("ADODB.Recordset")
 		
-		' prepera an in memory recordset 
-		' could be, and mostly, loaded from a database
+		' prepere an in memory recordset 
+		' could be, and most of the time will be, loaded from a database instead
 		rs.CursorType = adOpenKeyset
 		rs.CursorLocation = adUseClient
 		rs.LockType = adLockOptimistic
 		
 		rs.Fields.Append "ID", adInteger, , adFldKeyColumn
-		rs.Fields.Append "Nome", adVarChar, 50, adFldMayBeNull
+		rs.Fields.Append "NomeCompleto", adVarChar, 50, adFldMayBeNull
 		rs.Fields.Append "Valor", adDecimal, 14, adFldMayBeNull
 		rs.Fields("Valor").NumericScale = 2
 		
@@ -191,13 +193,13 @@ response.buffer = true
 		
 		rs.AddNew
 		rs("ID") = 1
-		rs("Nome") = "Nome 1"
+		rs("NomeCompleto") = "Nome 1"
 		rs("Valor") = 10.99
 		rs.Update
 		
 		rs.AddNew
 		rs("ID") = 2
-		rs("Nome") = "Nome 2"
+		rs("NomeCompleto") = "Nome 2"
 		rs("Valor") = 29.90
 		rs.Update
 		
@@ -215,7 +217,7 @@ response.buffer = true
 	if testLoad then
 		start = timer()
 		%>
-		<h3>Parse Output</h3>
+		<h3>Parse Output<% if testLoadArray then %>: Array<% end if %></h3>
 		<pre><%= outputObj.write %></pre>
 		<%
 		response.write round(timer() - start, 6)
