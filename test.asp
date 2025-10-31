@@ -31,9 +31,9 @@ response.buffer = true
 	<h1>JSON Object and Array Tests</h1>
 	<%
 	server.ScriptTimeout = 10
-	dim jsonObj, jsonString, jsonArr, outputObj
+	dim jsonObj, jsonString, jsonArr, outputObj, start
 	dim testLoad, testAdd, testRemove, testValue, testChange, testArrayPush, testLoadRecordset
-	dim testLoadArray, testChangeDefaultPropertyName, testGetItemAt
+	dim testLoadArray, testChangeDefaultPropertyName, testLowercaseKeys
 	
 	testLoad = true
 	testLoadArray = true
@@ -47,34 +47,36 @@ response.buffer = true
 	testLoadRecordset = true
 	
 	testChangeDefaultPropertyName = true
+
+	testLowercaseKeys = false
 	
 	set jsonObj = new JSONobject
 	set jsonArr = new jsonArray
 	
-	jsonObj.debug = false
+	jsonObj.debug = false ' switch to true to print internal parsing
 	
+	if testLowercaseKeys then
+		jsonObj.lowerCaseKeys = true
+		jsonArr.lowerCaseKeys = true
+	end if
+
+	%><p><b>Lowercase keys<% if testLowercaseKeys then %> enabled<% else %> disabled<% end if %></b></p><%
+
 	if testLoad then
 		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""bools"": true, ""arrays"": [1, ""2"", 3.4, [5, -6, [7, 8, [[[""9"", ""10""]]]]]], ""emptyArray"": [], ""emptyObject"": {}, ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] }, ""multiline"": ""Texto com\r\nMais de\r\numa linha e escapado com \\."" }"
 		
 		if testLoadArray then jsonString = "[" & jsonString & "]"
-		
-		dim start
-		start = timer()
-		set outputObj = jsonObj.parse(jsonString)
-
-		if testLoadArray and left(jsonString, 1) <> "[" then jsonString = "[" & jsonString & "]"
 		%>
 		<h3>Parse Input</h3>
 		<pre><%= jsonString %></pre>
 		<%
 		response.flush
 
-		dim start
 		start = timer()
 		set outputObj = jsonObj.parse(jsonString)
 		if testLoadArray then set jsonArr = outputObj
 
-		response.Write "Load time: " & (timer() - start) & " s<br>"
+		response.Write "Load time: " & round(timer() - start, 6) & " s<br>"
 	end if
 	
 	if testAdd then
@@ -96,13 +98,13 @@ response.buffer = true
 		multArr(2, 1) = "2,1"
 		multArr(2, 2) = "2,2"
 		multArr(2, 3) = "2,3"
-		
-		jsonObj.add "nome", "Jozé"
+
+		jsonObj.add "nome", "José"
 		jsonObj.add "ficticio", true
 		jsonObj.add "idade", 25
 		jsonObj.add "saldo", -52
 		jsonObj.add "bio", "Nascido em São Paulo\Brasil" & vbcrlf & "Sem filhos" & vbcrlf & vbtab & "Jogador de WoW"
-		jsonObj.add "data", now
+		jsonObj.add "data-atual", now
 		jsonObj.add "lista", arr
 		jsonObj.add "lista2", multArr
 		
@@ -122,7 +124,9 @@ response.buffer = true
 		jsonObj.defaultPropertyName = "CustomName"
 		jsonArr.defaultPropertyName = "CustomArrName"
 	end if
+
 	
+
 	if testValue then
 		%><h3>Get Values</h3><%
 		response.write "nome: " & jsonObj.value("nome") & "<br>"
@@ -174,14 +178,14 @@ response.buffer = true
 		dim rs
 		set rs = createObject("ADODB.Recordset")
 		
-		' prepera an in memory recordset 
-		' could be, and mostly, loaded from a database
+		' prepere an in memory recordset 
+		' could be, and most of the time will be, loaded from a database instead
 		rs.CursorType = adOpenKeyset
 		rs.CursorLocation = adUseClient
 		rs.LockType = adLockOptimistic
 		
 		rs.Fields.Append "ID", adInteger, , adFldKeyColumn
-		rs.Fields.Append "Nome", adVarChar, 50, adFldMayBeNull
+		rs.Fields.Append "NomeCompleto", adVarChar, 50, adFldMayBeNull
 		rs.Fields.Append "Valor", adDecimal, 14, adFldMayBeNull
 		rs.Fields("Valor").NumericScale = 2
 		
@@ -189,13 +193,13 @@ response.buffer = true
 		
 		rs.AddNew
 		rs("ID") = 1
-		rs("Nome") = "Nome 1"
+		rs("NomeCompleto") = "Nome 1"
 		rs("Valor") = 10.99
 		rs.Update
 		
 		rs.AddNew
 		rs("ID") = 2
-		rs("Nome") = "Nome 2"
+		rs("NomeCompleto") = "Nome 2"
 		rs("Valor") = 29.90
 		rs.Update
 		
@@ -213,10 +217,10 @@ response.buffer = true
 	if testLoad then
 		start = timer()
 		%>
-		<h3>Parse Output</h3>
+		<h3>Parse Output<% if testLoadArray then %>: Array<% end if %></h3>
 		<pre><%= outputObj.write %></pre>
 		<%
-		response.write timer() - start
+		response.write round(timer() - start, 6)
 		response.write " s<br>"
 		response.flush
 	end if
@@ -288,7 +292,7 @@ response.buffer = true
 		response.write "<br>"
 		if i mod 100 = 0 then response.flush
 	next
-	response.write timer() - start
+	response.write round(timer() - start, 6)
 	response.write " s<br>"
 
 	set newJson = nothing
