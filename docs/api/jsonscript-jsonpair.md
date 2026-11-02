@@ -59,11 +59,11 @@ script.Write()
 
 Represents one name/value pair inside a `JSONobject`. `JSONobject.pairs` exposes a snapshot array of these objects.
 
-| Member | Access | Type | Description |
-| --- | --- | --- | --- |
-| `name` | get/set | `String` | The pair's key. |
-| `value` | get/set | `Variant` | The pair's value. Use `Set` when reading or writing an object value. |
-| `parent` | get/set | `JSONobject` | The object that owns the pair. |
+| Member   | Access  | Type         | Description                                                          |
+| -------- | ------- | ------------ | -------------------------------------------------------------------- |
+| `name`   | get/set | `String`     | The pair's key.                                                      |
+| `value`  | get/set | `Variant`    | The pair's value. Use `Set` when reading or writing an object value. |
+| `parent` | get/set | `JSONobject` | The object that owns the pair.                                       |
 
 ```asp
 Dim pair, value

@@ -53,13 +53,13 @@ Response.LCID = 1033
 
 Common values:
 
-| LCID | Locale |
-| --- | --- |
+| LCID | Locale                  |
+| ---- | ----------------------- |
 | 1033 | English (United States) |
-| 1046 | Portuguese (Brazil) |
-| 1031 | German (Germany) |
-| 1036 | French (France) |
-| 3082 | Spanish (Spain) |
+| 1046 | Portuguese (Brazil)     |
+| 1031 | German (Germany)        |
+| 1036 | French (France)         |
+| 3082 | Spanish (Spain)         |
 
 Use the LCID for your own locale; JSON output itself always uses `.` as the decimal separator because the library switches to `1033` internally while parsing and serializing.
 

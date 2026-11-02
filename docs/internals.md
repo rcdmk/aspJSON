@@ -6,12 +6,12 @@ This page describes how the library is put together. It is aimed at maintainers 
 
 All classes live in [`jsonObject.class.asp`](../jsonObject.class.asp):
 
-| Class | Role |
-| --- | --- |
-| `JSONobject` | Parser, object builder, serializer, and recordset loader. |
-| `JSONarray` | Dynamic array with `Push`, `ItemAt`, and recordset loading. |
-| `JSONscript` | Raw-text wrapper that bypasses JSON quoting. |
-| `JSONpair` | One name/value pair inside a `JSONobject`. |
+| Class        | Role                                                        |
+| ------------ | ----------------------------------------------------------- |
+| `JSONobject` | Parser, object builder, serializer, and recordset loader.   |
+| `JSONarray`  | Dynamic array with `Push`, `ItemAt`, and recordset loading. |
+| `JSONscript` | Raw-text wrapper that bypasses JSON quoting.                |
+| `JSONpair`   | One name/value pair inside a `JSONobject`.                  |
 
 The file also defines the module-level constants:
 
@@ -26,16 +26,16 @@ const JSON_UNICODE_CHARS_REGEX = "\u(\d{4})"
 
 `JSONobject.Parse` is an **iterative state machine**, not a recursive descent parser. It walks the input one character at a time and switches between these modes:
 
-| Mode | Purpose |
-| --- | --- |
-| `init` | Starts a root, object, or array; creates the corresponding class and links its parent. |
-| `openKey` | Waits for the opening quote of an object key. |
-| `closeKey` | Collects characters until an unescaped closing quote. |
-| `preValue` | Waits for the `:` separator. |
-| `openValue` | Determines whether the value is a string, number, array, object, or keyword. |
-| `closeValue` | Collects the value and decodes string escapes. |
-| `addValue` | Converts the collected text and stores it in the current object or array. |
-| `next` | Handles `,`, `]`, and `}` and chooses the next state. |
+| Mode         | Purpose                                                                                |
+| ------------ | -------------------------------------------------------------------------------------- |
+| `init`       | Starts a root, object, or array; creates the corresponding class and links its parent. |
+| `openKey`    | Waits for the opening quote of an object key.                                          |
+| `closeKey`   | Collects characters until an unescaped closing quote.                                  |
+| `preValue`   | Waits for the `:` separator.                                                           |
+| `openValue`  | Determines whether the value is a string, number, array, object, or keyword.           |
+| `closeValue` | Collects the value and decodes string escapes.                                         |
+| `addValue`   | Converts the collected text and stores it in the current object or array.              |
+| `next`       | Handles `,`, `]`, and `}` and chooses the next state.                                  |
 
 Two references, `currentObject` and `currentArray`, plus the `openObject` / `openArray` counters, track where values belong. Depth values on the objects are used to decide whether a value belongs to the current object or to an enclosing array.
 
@@ -131,9 +131,9 @@ Serialization is compact by design; there is no indentation option.
 `GetTypeName` wraps `TypeName` and supplies fallbacks for two database-specific variants that VBScript does not name correctly:
 
 | VarType | Returned name |
-| --- | --- |
-| `14` | `Decimal` |
-| `16` | `Integer` |
+| ------- | ------------- |
+| `14`    | `Decimal`     |
+| `16`    | `Integer`     |
 
 `Add` also special-cases ADO `Field` objects, unwrapping `.Value`, and treats `IStringList` values as scalars.
 

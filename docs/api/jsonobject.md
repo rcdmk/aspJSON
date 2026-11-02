@@ -13,35 +13,35 @@ Set json = New JSONobject
 
 ### Properties
 
-| Property | Access | Type | Default | Description |
-| --- | --- | --- | --- | --- |
-| `debug` | get/set | `Boolean` | `False` | Writes parser and serializer diagnostics to the response. |
-| `defaultPropertyName` | get/set | `String` | `"data"` | Key used when an array is stored at the root, and by `LoadRecordSet`. |
-| `depth` | get | `Integer` | `0` | Depth in the object chain. Root is `0`; setting `parent` sets `parent.depth + 1`. |
-| `pairs` | get | `Variant()` of `JSONpair` | — | Snapshot of the object's name/value pairs. |
-| `parent` | get/set | `JSONobject` or `JSONarray` | `Nothing` | Parent container. Assigning it recalculates `depth`. |
-| `version` | get | `String` | — | Class version (`"3.9.0"`). |
+| Property              | Access  | Type                        | Default   | Description                                                                       |
+| --------------------- | ------- | --------------------------- | --------- | --------------------------------------------------------------------------------- |
+| `debug`               | get/set | `Boolean`                   | `False`   | Writes parser and serializer diagnostics to the response.                         |
+| `defaultPropertyName` | get/set | `String`                    | `"data"`  | Key used when an array is stored at the root, and by `LoadRecordSet`.             |
+| `depth`               | get     | `Integer`                   | `0`       | Depth in the object chain. Root is `0`; setting `parent` sets `parent.depth + 1`. |
+| `pairs`               | get     | `Variant()` of `JSONpair`   | —         | Snapshot of the object's name/value pairs.                                        |
+| `parent`              | get/set | `JSONobject` or `JSONarray` | `Nothing` | Parent container. Assigning it recalculates `depth`.                              |
+| `version`             | get     | `String`                    | —         | Class version (`"3.9.0"`).                                                        |
 
 ### Methods
 
-| Method | Returns | Description |
-| --- | --- | --- |
-| [`Parse(strJson)`](#parse) | `JSONobject` / `JSONarray` | Parses JSON text and populates the object. |
-| [`Add(prop, value)`](#add) | — | Adds a property. Raises an error if the name exists. |
-| [`Remove(prop)`](#remove) | — | Removes a property; silent if it does not exist. |
-| [`Value(prop)`](#value) | `Variant` | Returns a property value. This is the default function, so `json(prop)` also works. |
-| [`Change(prop, value)`](#change) | — | Updates a property, creating it if necessary. |
-| [`Serialize()`](#serialize) | `String` | Returns the JSON representation. |
-| [`Write()`](#write) | — | Writes the JSON representation to the response. |
-| [`LoadRecordSet(rs)`](#loadrecordset) | — | Loads all records into an array under `defaultPropertyName`. |
-| [`LoadFirstRecord(rs)`](#loadfirstrecord) | — | Adds the fields of the current record as properties. |
-| [`ArrayPush(arr, value)`](#arraypush-deprecated) | `Variant()` | **Deprecated.** Appends a value to a VBScript array. |
-| [`GetTypeName(value)`](#gettypename) | `String` | Type name with extra support for MySQL value types. |
-| [`EscapeCharacters(text)`](#escapecharacters) | `String` | Escapes a string for JSON output. |
-| [`SerializeObject(obj)`](#serializeobject-serializevalue-serializearray-numdimensions) | `String` | Serializes a `JSONobject`. |
-| [`SerializeValue(value)`](#serializeobject-serializevalue-serializearray-numdimensions) | `String` | Serializes a scalar value. |
-| [`SerializeArray(arr)`](#serializeobject-serializevalue-serializearray-numdimensions) | `String` | Serializes a `JSONarray` or VBScript array. |
-| [`NumDimensions(arr)`](#serializeobject-serializevalue-serializearray-numdimensions) | `Integer` | Returns the number of dimensions of a VBScript array. |
+| Method                                                                                  | Returns                    | Description                                                                         |
+| --------------------------------------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------- |
+| [`Parse(strJson)`](#parse)                                                              | `JSONobject` / `JSONarray` | Parses JSON text and populates the object.                                          |
+| [`Add(prop, value)`](#add)                                                              | —                          | Adds a property. Raises an error if the name exists.                                |
+| [`Remove(prop)`](#remove)                                                               | —                          | Removes a property; silent if it does not exist.                                    |
+| [`Value(prop)`](#value)                                                                 | `Variant`                  | Returns a property value. This is the default function, so `json(prop)` also works. |
+| [`Change(prop, value)`](#change)                                                        | —                          | Updates a property, creating it if necessary.                                       |
+| [`Serialize()`](#serialize)                                                             | `String`                   | Returns the JSON representation.                                                    |
+| [`Write()`](#write)                                                                     | —                          | Writes the JSON representation to the response.                                     |
+| [`LoadRecordSet(rs)`](#loadrecordset)                                                   | —                          | Loads all records into an array under `defaultPropertyName`.                        |
+| [`LoadFirstRecord(rs)`](#loadfirstrecord)                                               | —                          | Adds the fields of the current record as properties.                                |
+| [`ArrayPush(arr, value)`](#arraypush-deprecated)                                        | `Variant()`                | **Deprecated.** Appends a value to a VBScript array.                                |
+| [`GetTypeName(value)`](#gettypename)                                                    | `String`                   | Type name with extra support for MySQL value types.                                 |
+| [`EscapeCharacters(text)`](#escapecharacters)                                           | `String`                   | Escapes a string for JSON output.                                                   |
+| [`SerializeObject(obj)`](#serializeobject-serializevalue-serializearray-numdimensions)  | `String`                   | Serializes a `JSONobject`.                                                          |
+| [`SerializeValue(value)`](#serializeobject-serializevalue-serializearray-numdimensions) | `String`                   | Serializes a scalar value.                                                          |
+| [`SerializeArray(arr)`](#serializeobject-serializevalue-serializearray-numdimensions)   | `String`                   | Serializes a `JSONarray` or VBScript array.                                         |
+| [`NumDimensions(arr)`](#serializeobject-serializevalue-serializearray-numdimensions)    | `Integer`                  | Returns the number of dimensions of a VBScript array.                               |
 
 ## Properties
 
@@ -129,8 +129,8 @@ Set result = json.Parse(strJson)
 
 **Parameters**
 
-| Name | Type | Description |
-| --- | --- | --- |
+| Name      | Type     | Description         |
+| --------- | -------- | ------------------- |
 | `strJson` | `String` | JSON text to parse. |
 
 **Returns:** the root of the parsed document.
@@ -173,9 +173,9 @@ json.Add prop, value
 
 **Parameters**
 
-| Name | Type | Description |
-| --- | --- | --- |
-| `prop` | `String` | Property name. |
+| Name    | Type      | Description     |
+| ------- | --------- | --------------- |
+| `prop`  | `String`  | Property name.  |
 | `value` | `Variant` | Value to store. |
 
 **Remarks**
@@ -241,10 +241,10 @@ json.Change prop, value
 
 **Parameters**
 
-| Name | Type | Description |
-| --- | --- | --- |
-| `prop` | `String` | Property name. |
-| `value` | `Variant` | New value. |
+| Name    | Type      | Description    |
+| ------- | --------- | -------------- |
+| `prop`  | `String`  | Property name. |
+| `value` | `Variant` | New value.     |
 
 **Remarks**
 
@@ -296,8 +296,8 @@ json.LoadRecordSet rs
 
 **Parameters**
 
-| Name | Type | Description |
-| --- | --- | --- |
+| Name | Type              | Description     |
+| ---- | ----------------- | --------------- |
 | `rs` | `ADODB.Recordset` | Open recordset. |
 
 **Remarks**
@@ -361,10 +361,10 @@ Returns the VBScript type name of a value, with fallbacks for ADO/MySQL types th
 typeName = json.GetTypeName(value)
 ```
 
-| VarType | Returned name |
-| --- | --- |
-| `14` | `"Decimal"` (MySQL decimal) |
-| `16` | `"Integer"` (MySQL tinyint) |
+| VarType | Returned name               |
+| ------- | --------------------------- |
+| `14`    | `"Decimal"` (MySQL decimal) |
+| `16`    | `"Integer"` (MySQL tinyint) |
 
 All other values return `TypeName(value)`.
 

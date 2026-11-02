@@ -4,14 +4,14 @@ The library raises errors with `Err.Raise`, using the constants defined at the t
 
 ## Error constants
 
-| Constant | Value | Raised by | Meaning |
-| --- | --- | --- | --- |
-| `JSON_ERROR_PARSE` | `1` | `JSONobject.Parse` | The input is too short to be valid JSON (fewer than 2 characters after trimming). |
-| `JSON_ERROR_PROPERTY_ALREADY_EXISTS` | `2` | `JSONobject.Add`, `JSONobject.Parse`, `JSONobject.LoadFirstRecord` | A property with the same name already exists, a JSON object contains duplicate keys, or a record field conflicts with an existing property. |
-| `JSON_ERROR_PROPERTY_DOES_NOT_EXISTS` | `3` | — | **Deprecated.** Reserved for compatibility; not raised by the current code. |
-| `JSON_ERROR_NOT_AN_ARRAY` | `4` | `JSONarray.items` (setter) | A non-array value was assigned to `JSONarray.items`. |
-| `JSON_ERROR_NOT_A_STRING` | `5` | `JSONscript.value` (setter) | A non-string value was assigned to `JSONscript.value`. |
-| `JSON_ERROR_INDEX_OUT_OF_BOUNDS` | `9` | `JSONarray.ItemAt` | The index is negative, greater than or equal to `length`, or the array is empty. The number matches VBScript's "Subscript out of range" error. |
+| Constant                              | Value | Raised by                                                          | Meaning                                                                                                                                        |
+| ------------------------------------- | ----- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `JSON_ERROR_PARSE`                    | `1`   | `JSONobject.Parse`                                                 | The input is too short to be valid JSON (fewer than 2 characters after trimming).                                                              |
+| `JSON_ERROR_PROPERTY_ALREADY_EXISTS`  | `2`   | `JSONobject.Add`, `JSONobject.Parse`, `JSONobject.LoadFirstRecord` | A property with the same name already exists, a JSON object contains duplicate keys, or a record field conflicts with an existing property.    |
+| `JSON_ERROR_PROPERTY_DOES_NOT_EXISTS` | `3`   | —                                                                  | **Deprecated.** Reserved for compatibility; not raised by the current code.                                                                    |
+| `JSON_ERROR_NOT_AN_ARRAY`             | `4`   | `JSONarray.items` (setter)                                         | A non-array value was assigned to `JSONarray.items`.                                                                                           |
+| `JSON_ERROR_NOT_A_STRING`             | `5`   | `JSONscript.value` (setter)                                        | A non-string value was assigned to `JSONscript.value`.                                                                                         |
+| `JSON_ERROR_INDEX_OUT_OF_BOUNDS`      | `9`   | `JSONarray.ItemAt`                                                 | The index is negative, greater than or equal to `length`, or the array is empty. The number matches VBScript's "Subscript out of range" error. |
 
 `Err.Source` is set to the class name (`JSONobject`, `JSONarray`, or `JSONscript`).
 
@@ -82,13 +82,13 @@ End If
 
 ## Common non-custom errors
 
-| Error | Typical cause |
-| --- | --- |
+| Error                                                                | Typical cause                                                                                                   |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `Object required` / `Object doesn't support this property or method` | The include file was not loaded, an object variable was used without `Set`, or a non-object was treated as one. |
-| `Subscript out of range` (`9`) | An out-of-range array access, including `JSONarray.ItemAt`. |
-| `Type mismatch` | An unexpected value type was serialized or assigned, or a malformed JSON string confused the parser. |
-| Custom error `4` | Assigning a non-array to `JSONarray.items`. |
-| Custom error `5` | Assigning a non-string to `JSONscript.value`. |
+| `Subscript out of range` (`9`)                                       | An out-of-range array access, including `JSONarray.ItemAt`.                                                     |
+| `Type mismatch`                                                      | An unexpected value type was serialized or assigned, or a malformed JSON string confused the parser.            |
+| Custom error `4`                                                     | Assigning a non-array to `JSONarray.items`.                                                                     |
+| Custom error `5`                                                     | Assigning a non-string to `JSONscript.value`.                                                                   |
 
 ## See also
 

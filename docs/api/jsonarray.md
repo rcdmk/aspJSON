@@ -13,25 +13,25 @@ Set arr = New JSONarray
 
 ### Properties
 
-| Property | Access | Type | Default | Description |
-| --- | --- | --- | --- | --- |
-| `version` | get | `String` | — | Class version (`"2.4.0"`). |
-| `items` | get/set | `Variant()` | empty array | Snapshot of the items (get), or replace the contents from a VBScript array (set). |
-| `capacity` | get | `Integer` | `0` | Allocated buffer size; always greater than or equal to `length`. |
-| `length` | get | `Integer` | `0` | Number of items in the array. |
-| `depth` | get | `Integer` | `0` | Depth in the object chain. Set when `parent` is assigned. |
-| `parent` | get/set | `JSONobject` or `JSONarray` | `Nothing` | Parent container. |
-| `defaultPropertyName` | get/set | `String` | `"data"` | Inherited from a parent object; exposed for consistency. Array output itself is always a bare array. |
+| Property              | Access  | Type                        | Default     | Description                                                                                          |
+| --------------------- | ------- | --------------------------- | ----------- | ---------------------------------------------------------------------------------------------------- |
+| `version`             | get     | `String`                    | —           | Class version (`"2.4.0"`).                                                                           |
+| `items`               | get/set | `Variant()`                 | empty array | Snapshot of the items (get), or replace the contents from a VBScript array (set).                    |
+| `capacity`            | get     | `Integer`                   | `0`         | Allocated buffer size; always greater than or equal to `length`.                                     |
+| `length`              | get     | `Integer`                   | `0`         | Number of items in the array.                                                                        |
+| `depth`               | get     | `Integer`                   | `0`         | Depth in the object chain. Set when `parent` is assigned.                                            |
+| `parent`              | get/set | `JSONobject` or `JSONarray` | `Nothing`   | Parent container.                                                                                    |
+| `defaultPropertyName` | get/set | `String`                    | `"data"`    | Inherited from a parent object; exposed for consistency. Array output itself is always a bare array. |
 
 ### Methods
 
-| Method | Returns | Description |
-| --- | --- | --- |
-| [`Push(value)`](#push) | — | Appends a value. |
-| [`ItemAt(index)`](#itemat) | `Variant` | Returns the item at an index. This is the default function, so `arr(index)` also works. |
-| [`LoadRecordSet(rs)`](#loadrecordset) | — | Appends every remaining record as an object. |
-| [`Serialize()`](#serialize) | `String` | Returns the JSON array text. |
-| [`Write()`](#write) | — | Writes the JSON array to the response. |
+| Method                                | Returns   | Description                                                                             |
+| ------------------------------------- | --------- | --------------------------------------------------------------------------------------- |
+| [`Push(value)`](#push)                | —         | Appends a value.                                                                        |
+| [`ItemAt(index)`](#itemat)            | `Variant` | Returns the item at an index. This is the default function, so `arr(index)` also works. |
+| [`LoadRecordSet(rs)`](#loadrecordset) | —         | Appends every remaining record as an object.                                            |
+| [`Serialize()`](#serialize)           | `String`  | Returns the JSON array text.                                                            |
+| [`Write()`](#write)                   | —         | Writes the JSON array to the response.                                                  |
 
 ## Properties
 
@@ -112,8 +112,8 @@ arr.Push value
 
 **Parameters**
 
-| Name | Type | Description |
-| --- | --- | --- |
+| Name    | Type      | Description                                                         |
+| ------- | --------- | ------------------------------------------------------------------- |
 | `value` | `Variant` | Value to append. Objects are stored by reference; scalars by value. |
 
 The array grows automatically. Values can be scalars, `JSONobject`, `JSONarray`, or VBScript arrays.
@@ -146,8 +146,8 @@ value = arr(index)
 
 **Parameters**
 
-| Name | Type | Description |
-| --- | --- | --- |
+| Name    | Type      | Description            |
+| ------- | --------- | ---------------------- |
 | `index` | `Integer` | Zero-based item index. |
 
 **Returns:** the item. Object items must be assigned with `Set`:
@@ -170,8 +170,8 @@ arr.LoadRecordSet rs
 
 **Parameters**
 
-| Name | Type | Description |
-| --- | --- | --- |
+| Name | Type              | Description     |
+| ---- | ----------------- | --------------- |
 | `rs` | `ADODB.Recordset` | Open recordset. |
 
 **Remarks**

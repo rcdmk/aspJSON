@@ -10,21 +10,21 @@ While serializing, the library temporarily sets `Response.LCID = 1033` (en-US) s
 
 ### Value mapping
 
-| VBScript value | JSON output | Notes |
-| --- | --- | --- |
-| `Null` | `null` | Standard JSON null. |
-| `Nothing` | `undefined` | Non-standard JSON. Prefer `Null`. |
-| `Empty` | `""` | Serialized as an empty quoted string. |
-| `True` / `False` | `true` / `false` | |
-| `Byte`, `Integer`, `Long`, `Single`, `Double`, `Currency`, `Decimal` | number | Unquoted. Decimal separator is `.`. |
-| `Date` | `"YYYY-MM-DDTHH:MM:SS"` | Server-local time; no milliseconds or timezone offset. |
-| `String`, `Char`, `Empty` | `"..."` | Escaped; see below. |
-| `JSONobject` | object | Recursively serialized. |
-| `JSONarray` | array | Recursively serialized. |
-| `JSONscript` | raw text | Only when used as a `JSONobject` property value. Not quoted or escaped. |
-| One-dimensional VBScript array | array | Elements serialized recursively. |
-| Two-dimensional VBScript array | array of arrays | Outer array by first dimension, inner arrays by second dimension. |
-| Other non-object types | `"TypeName"` | Fallback: the VBScript type name as a quoted string. |
+| VBScript value                                                       | JSON output             | Notes                                                                   |
+| -------------------------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------- |
+| `Null`                                                               | `null`                  | Standard JSON null.                                                     |
+| `Nothing`                                                            | `undefined`             | Non-standard JSON. Prefer `Null`.                                       |
+| `Empty`                                                              | `""`                    | Serialized as an empty quoted string.                                   |
+| `True` / `False`                                                     | `true` / `false`        |                                                                         |
+| `Byte`, `Integer`, `Long`, `Single`, `Double`, `Currency`, `Decimal` | number                  | Unquoted. Decimal separator is `.`.                                     |
+| `Date`                                                               | `"YYYY-MM-DDTHH:MM:SS"` | Server-local time; no milliseconds or timezone offset.                  |
+| `String`, `Char`, `Empty`                                            | `"..."`                 | Escaped; see below.                                                     |
+| `JSONobject`                                                         | object                  | Recursively serialized.                                                 |
+| `JSONarray`                                                          | array                   | Recursively serialized.                                                 |
+| `JSONscript`                                                         | raw text                | Only when used as a `JSONobject` property value. Not quoted or escaped. |
+| One-dimensional VBScript array                                       | array                   | Elements serialized recursively.                                        |
+| Two-dimensional VBScript array                                       | array of arrays         | Outer array by first dimension, inner arrays by second dimension.       |
+| Other non-object types                                               | `"TypeName"`            | Fallback: the VBScript type name as a quoted string.                    |
 
 ### Numbers
 
@@ -49,14 +49,14 @@ Parsed date-looking strings stay strings; `Parse` does not convert them to `Date
 
 `EscapeCharacters` performs these replacements, in order:
 
-| Character | Output |
-| --- | --- |
-| `\` (backslash) | `\\` |
-| `"` (double quote) | `\"` |
-| `CR` (`vbCr`, U+000D) | `\r` |
-| `LF` (`vbLf`, U+000A) | `\n` |
-| `TAB` (`vbTab`, U+0009) | `\t` |
-| backspace (`vbBack`, U+0008) | `\b` |
+| Character                    | Output |
+| ---------------------------- | ------ |
+| `\` (backslash)              | `\\`   |
+| `"` (double quote)           | `\"`   |
+| `CR` (`vbCr`, U+000D)        | `\r`   |
+| `LF` (`vbLf`, U+000A)        | `\n`   |
+| `TAB` (`vbTab`, U+0009)      | `\t`   |
+| backspace (`vbBack`, U+0008) | `\b`   |
 
 Not escaped:
 
@@ -101,15 +101,15 @@ Only use it with trusted content. See [JSONscript](../api/jsonscript-jsonpair.md
 
 ### Parsing type mapping
 
-| JSON input | VBScript value |
-| --- | --- |
-| `"text"` | `String` |
-| `123`, `-1.5`, `1e3` | `Double` |
-| `true` / `false` | `Boolean` |
-| `null` | `Null` |
-| `undefined` | `Empty` (via `Eval`) |
-| `{ ... }` | `JSONobject` |
-| `[ ... ]` | `JSONarray` |
+| JSON input           | VBScript value       |
+| -------------------- | -------------------- |
+| `"text"`             | `String`             |
+| `123`, `-1.5`, `1e3` | `Double`             |
+| `true` / `false`     | `Boolean`            |
+| `null`               | `Null`               |
+| `undefined`          | `Empty` (via `Eval`) |
+| `{ ... }`            | `JSONobject`         |
+| `[ ... ]`            | `JSONarray`          |
 
 Because `undefined` maps to `Empty`, and `Empty` serializes as `""`, an `undefined` token does not round-trip back to `undefined`.
 
@@ -117,13 +117,13 @@ Because `undefined` maps to `Empty`, and `Empty` serializes as `""`, an `undefin
 
 The parser decodes these escapes in **string values**:
 
-| Input | Decoded to |
-| --- | --- |
-| `\n` | line feed |
-| `\r` | carriage return |
-| `\t` | tab |
-| `\b` | backspace |
-| `\\` | backslash |
+| Input    | Decoded to                   |
+| -------- | ---------------------------- |
+| `\n`     | line feed                    |
+| `\r`     | carriage return              |
+| `\t`     | tab                          |
+| `\b`     | backspace                    |
+| `\\`     | backslash                    |
 | `\uXXXX` | Unicode character via `ChrW` |
 
 For characters outside the Basic Multilingual Plane, provide a surrogate pair (`\uD83D\uDE00` for 😀).
