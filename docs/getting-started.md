@@ -63,6 +63,8 @@ Common values:
 
 Use the LCID for your own locale; JSON output itself always uses `.` as the decimal separator because the library switches to `1033` internally while parsing and serializing.
 
+If no LCID is set, `Response.LCID` reads `0`. The library saves that value, works under `1033`, then tries to restore `0`, which IIS rejects with `ASP 0219: Invalid LCID` (`80004005`). Always set a valid LCID before using the library.
+
 ## Your first page
 
 ```asp

@@ -59,6 +59,8 @@ The parser starts with `key = JSON_ROOT_KEY` and `root = me`.
 
 Both parsing and serialization save `Response.LCID`, set it to `1033`, and restore it at the end of the method. This keeps number formatting independent of the page locale. The restore happens on normal completion; if a runtime error escapes in the middle of parsing or serialization, the response LCID may remain `1033` until you set it again.
 
+`Response.LCID` is `0` until an LCID is set. Restoring `0` raises `ASP 0219: Invalid LCID` (`80004005`), so an unset LCID fails even when the actual conversion would have succeeded.
+
 ## Object storage
 
 A `JSONobject` stores an array of `JSONpair` references:
