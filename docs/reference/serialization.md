@@ -79,7 +79,7 @@ json.Add "values", Array(1, "two", True, Null)
 
 - One- and two-dimensional arrays are supported.
 - A two-dimensional array is serialized as an array of arrays, looping first over dimension 1 and then dimension 2.
-- Higher dimensions are not supported.
+- Three or more dimensions are not supported. `Add` accepts them, but serialization raises error `9` (`Subscript out of range`), and object cleanup may raise the same error.
 - Jagged/nested arrays work when built with nested `JSONarray` objects or nested VBScript arrays.
 
 ### Raw output

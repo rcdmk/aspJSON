@@ -63,7 +63,7 @@ json.Add "grid", grid
 ' "grid":[[1,2],[3,4]]
 ```
 
-Only one- and two-dimensional arrays are handled by the serializer.
+Only one- and two-dimensional arrays are handled by the serializer. Three or more dimensions are not supported: `Add` accepts them, but serialization raises error `9` (`Subscript out of range`), and cleanup may raise the same error.
 
 ## Read values
 

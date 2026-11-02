@@ -149,7 +149,7 @@ Serialization is compact by design; there is no indentation option.
 - **Object/array roots only.** Scalar JSON roots are not supported.
 - **Property names are not escaped or unescaped.** Avoid quotes, backslashes, newlines, and control characters in keys.
 - **Some escapes are not decoded.** `\"` remains escaped in parsed values; `\/` is not converted.
-- **Two array dimensions maximum** for VBScript arrays.
+- **Two array dimensions maximum** for VBScript arrays. `Add` accepts 3D+ arrays, but serialization raises error `9` (`Subscript out of range`), and cleanup may also raise it.
 - **Case-sensitive key lookup** under the default `Option Compare Binary`.
 - **Duplicate keys raise error `2`** instead of taking the last value.
 - **No pretty printing.** Output is always compact.
