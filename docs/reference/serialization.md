@@ -10,21 +10,21 @@ While serializing, the library temporarily sets `Response.LCID = 1033` (en-US) s
 
 ### Value mapping
 
-| VBScript value                                                       | JSON output             | Notes                                                                   |
-| -------------------------------------------------------------------- | ----------------------- | ----------------------------------------------------------------------- |
-| `Null`                                                               | `null`                  | Standard JSON null.                                                     |
-| `Nothing`                                                            | `undefined`             | Non-standard JSON. Prefer `Null`.                                       |
-| `Empty`                                                              | `""`                    | Serialized as an empty quoted string.                                   |
-| `True` / `False`                                                     | `true` / `false`        |                                                                         |
-| `Byte`, `Integer`, `Long`, `Single`, `Double`, `Currency`, `Decimal` | number                  | Unquoted. Decimal separator is `.`.                                     |
-| `Date`                                                               | `"YYYY-MM-DDTHH:MM:SS"` | Server-local time; no milliseconds or timezone offset.                  |
-| `String`, `Char`, `Empty`                                            | `"..."`                 | Escaped; see below.                                                     |
-| `JSONobject`                                                         | object                  | Recursively serialized.                                                 |
-| `JSONarray`                                                          | array                   | Recursively serialized.                                                 |
-| `JSONscript`                                                         | raw text                | Only when used as a `JSONobject` property value. Not quoted or escaped. |
-| One-dimensional VBScript array                                       | array                   | Elements serialized recursively.                                        |
-| Two-dimensional VBScript array                                       | array of arrays         | Outer array by first dimension, inner arrays by second dimension.       |
-| Other non-object types                                               | `"TypeName"`            | Fallback: the VBScript type name as a quoted string.                    |
+| VBScript value                                                       | JSON output                                                       | Notes                                                                                                       |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `Null`                                                               | `null`                                                            | Standard JSON null.                                                                                         |
+| `Nothing`                                                            | `undefined` only via `SerializeValue`; `Serialize()` raises `424` | `IsObject(Nothing)` is true, so normal object/array serialization fails with `Object required`. Use `Null`. |
+| `Empty`                                                              | `""`                                                              | Serialized as an empty quoted string.                                                                       |
+| `True` / `False`                                                     | `true` / `false`                                                  |                                                                                                             |
+| `Byte`, `Integer`, `Long`, `Single`, `Double`, `Currency`, `Decimal` | number                                                            | Unquoted. Decimal separator is `.`.                                                                         |
+| `Date`                                                               | `"YYYY-MM-DDTHH:MM:SS"`                                           | Server-local time; no milliseconds or timezone offset.                                                      |
+| `String`, `Char`, `Empty`                                            | `"..."`                                                           | Escaped; see below.                                                                                         |
+| `JSONobject`                                                         | object                                                            | Recursively serialized.                                                                                     |
+| `JSONarray`                                                          | array                                                             | Recursively serialized.                                                                                     |
+| `JSONscript`                                                         | raw text                                                          | Only when used as a `JSONobject` property value. Not quoted or escaped.                                     |
+| One-dimensional VBScript array                                       | array                                                             | Elements serialized recursively.                                                                            |
+| Two-dimensional VBScript array                                       | array of arrays                                                   | Outer array by first dimension, inner arrays by second dimension.                                           |
+| Other non-object types                                               | `"TypeName"`                                                      | Fallback: the VBScript type name as a quoted string.                                                        |
 
 ### Numbers
 
@@ -140,7 +140,7 @@ Other JSON escapes are not decoded. For example, `\"` is used to find the end of
 - Duplicate object keys raise `JSON_ERROR_PROPERTY_ALREADY_EXISTS` (`2`).
 - Object keys are matched using VBScript string comparison (binary/case-sensitive by default).
 - Numbers are parsed with `CDbl`; they become `Double`.
-- Special keywords (`true`, `false`, `null`, `undefined`) must begin with a lowercase letter.
+- Special keywords (`true`, `false`, `null`, `undefined`) must begin with a lowercase letter. A keyword starting with an uppercase letter, such as `TRUE`, is not recognized and can be silently skipped.
 - The parser is not a strict RFC 8259 validator. Malformed input may raise a VBScript runtime error or produce an unexpected result. Validate untrusted input at the boundary if strict rejection is required.
 - The parser temporarily sets `Response.LCID = 1033` and restores the previous LCID when it finishes.
 - Input shorter than two characters raises `JSON_ERROR_PARSE` (`1`).

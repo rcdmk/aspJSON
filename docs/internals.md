@@ -153,7 +153,7 @@ Serialization is compact by design; there is no indentation option.
 - **Case-sensitive key lookup** under the default `Option Compare Binary`.
 - **Duplicate keys raise error `2`** instead of taking the last value.
 - **No pretty printing.** Output is always compact.
-- **Non-standard values.** `Nothing` serializes as `undefined`; parsed `undefined` becomes `Empty` (and then `""`).
+- **Non-standard values.** `Nothing` is an object reference; serializing it in an object or array raises `424` (`Object required`). `SerializeValue(Nothing)` alone returns `undefined`. Parsed `undefined` becomes `Empty` (and then `""`).
 - **Dates have no timezone or milliseconds.**
 - **In-memory only.** There is no streaming/SAX parser or writer.
 - **Per-request use.** Instances hold parse state and parent references; do not share them across requests or store them in `Application` state.

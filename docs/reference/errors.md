@@ -82,13 +82,13 @@ End If
 
 ## Common non-custom errors
 
-| Error                                                                | Typical cause                                                                                                   |
-| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `Object required` / `Object doesn't support this property or method` | The include file was not loaded, an object variable was used without `Set`, or a non-object was treated as one. |
-| `Subscript out of range` (`9`)                                       | An out-of-range array access, including `JSONarray.ItemAt`.                                                     |
-| `Type mismatch`                                                      | An unexpected value type was serialized or assigned, or a malformed JSON string confused the parser.            |
-| Custom error `4`                                                     | Assigning a non-array to `JSONarray.items`.                                                                     |
-| Custom error `5`                                                     | Assigning a non-string to `JSONscript.value`.                                                                   |
+| Error                                                                | Typical cause                                                                                                                                                       |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Object required` / `Object doesn't support this property or method` | The include file was not loaded, an object variable was used without `Set`, a non-object was treated as one, or `Nothing` was used as a value during serialization. |
+| `Subscript out of range` (`9`)                                       | An out-of-range array access, including `JSONarray.ItemAt`.                                                                                                         |
+| `Type mismatch`                                                      | An unexpected value type was serialized or assigned, or a malformed JSON string confused the parser.                                                                |
+| Custom error `4`                                                     | Assigning a non-array to `JSONarray.items`.                                                                                                                         |
+| Custom error `5`                                                     | Assigning a non-string to `JSONscript.value`.                                                                                                                       |
 
 ## See also
 

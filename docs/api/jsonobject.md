@@ -394,6 +394,8 @@ json.SerializeArray(arr)       ' serializes a JSONarray or a 1D/2D VBScript arra
 json.NumDimensions(arr)        ' number of dimensions of a VBScript array
 ```
 
+`SerializeValue(Nothing)` returns `undefined`, but normal object/array serialization of `Nothing` raises `424` (`Object required`). Use `Null` for JSON `null`.
+
 `SerializeArray` handles one- and two-dimensional arrays. Two-dimensional arrays are emitted as an array of arrays. Three or more dimensions are not supported: `Add` accepts them, but serialization raises error `9` (`Subscript out of range`), and cleanup may raise the same error.
 
 ## Example

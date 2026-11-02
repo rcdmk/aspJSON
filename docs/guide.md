@@ -368,15 +368,15 @@ json.Add "created", Now
 
 Dates are written as `YYYY-MM-DDTHH:MM:SS` using server-local time, without milliseconds or a timezone offset.
 
-| VBScript value   | JSON output                |
-| ---------------- | -------------------------- |
-| `Null`           | `null`                     |
-| `Nothing`        | `undefined` (non-standard) |
-| `Empty`          | `""`                       |
-| `True` / `False` | `true` / `false`           |
-| `Now` / a `Date` | `"YYYY-MM-DDTHH:MM:SS"`    |
+| VBScript value   | JSON output                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| `Null`           | `null`                                                       |
+| `Nothing`        | Raises `Object required` (`424`) when serialized; use `Null` |
+| `Empty`          | `""`                                                         |
+| `True` / `False` | `true` / `false`                                             |
+| `Now` / a `Date` | `"YYYY-MM-DDTHH:MM:SS"`                                      |
 
-Use `Null` for JSON `null`. Avoid serializing `Nothing` unless the consumer accepts non-standard `undefined`.
+Use `Null` for JSON `null`. Do not use `Nothing` as an object or array value: normal serialization raises `Object required` (`424`). `SerializeValue(Nothing)` alone returns `undefined`, which is non-standard.
 
 ## Debug mode
 
