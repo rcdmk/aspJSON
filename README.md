@@ -2,6 +2,16 @@
 
 ## By RCDMK - rcdmk[at]hotmail[dot]com
 
+### Documentation
+
+Full documentation is available in the [docs](docs/README.md) folder:
+
+* [Getting started](docs/getting-started.md) - requirements, installation, LCID setup, and first page
+* [Usage guide](docs/guide.md) - common tasks with examples
+* [JSONobject API](docs/api/jsonobject.md) and [JSONarray API](docs/api/jsonarray.md)
+* [Serialization reference](docs/reference/serialization.md) and [error reference](docs/reference/errors.md)
+* [Internals](docs/internals.md) - parser design, storage, performance, and limitations
+
 ### Licence:
 MIT license: http://opensource.org/licenses/mit-license.php  
 The MIT License (MIT)  
