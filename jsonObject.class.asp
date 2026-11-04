@@ -20,6 +20,7 @@ class JSONobject
 	dim i_debug, i_depth, i_parent
 	dim i_properties, i_version, i_defaultPropertyName
 	dim i_properties_count, i_properties_capacity
+	dim i_lowerCaseKeys
 	private vbback
 	
 	' Set to true to show the internals of the parsing mecanism
@@ -39,6 +40,16 @@ class JSONobject
 
 	public property let defaultPropertyName(value)
 		i_defaultPropertyName = value
+	end property
+
+	
+	' Gets/sets the automatic lowercasing of all property names when added, effectivelly turning property names case insensitive
+	public property get lowerCaseKeys
+		lowerCaseKeys = i_lowerCaseKeys
+	end property
+
+	public property let lowerCaseKeys(value)
+		i_lowerCaseKeys = value
 	end property
 
 
@@ -82,6 +93,7 @@ class JSONobject
 		i_depth = 0
 		i_debug = false
 		i_defaultPropertyName = JSON_DEFAULT_PROPERTY_NAME
+		i_lowerCaseKeys = false
 		
 		set i_parent = nothing
 		redim i_properties(-1)
@@ -596,7 +608,7 @@ class JSONobject
 		found = false		
 		
 		i = 0
-		
+
 		do while i < i_properties_count
 			set p = i_properties(i)
 			
@@ -663,7 +675,11 @@ class JSONobject
 			if prop.name = JSON_ROOT_KEY then
 				out = out & ("""" & obj.defaultPropertyName & """:")
 			else
-				out = out & ("""" & prop.name & """:")
+				if i_lowerCaseKeys then
+					out = out & ("""" & lcase(prop.name) & """:")
+				else
+					out = out & ("""" & prop.name & """:")
+				end if
 			end if
 			
 			if isArray(value) or GetTypeName(value) = "JSONarray" then
@@ -960,7 +976,7 @@ end class
 ' JSON array class
 ' Represents an array of JSON objects and values
 class JSONarray
-	dim i_items, i_depth, i_parent, i_version, i_defaultPropertyName
+	dim i_items, i_depth, i_parent, i_version, i_defaultPropertyName, i_lowerCaseKeys
 	dim i_items_count, i_items_capacity
 
 	' The class version
@@ -1012,6 +1028,7 @@ class JSONarray
 		set i_parent = value
 		i_depth = i_parent.depth + 1
 		i_defaultPropertyName = i_parent.defaultPropertyName
+		i_lowerCaseKeys = i_parent.lowerCaseKeys
 	end property
 	
 	' Gets/sets the default property name generated when loading recordsets and arrays (default "data")
@@ -1024,11 +1041,21 @@ class JSONarray
 	end property
 
 	
+	' Gets/sets the automatic lowercasing of all property names when added, effectivelly turning property names case insensitive
+	public property get lowerCaseKeys
+		lowerCaseKeys = i_lowerCaseKeys
+	end property
+
+	public property let lowerCaseKeys(value)
+		i_lowerCaseKeys = value
+	end property
+	
 	
 	' Constructor and destructor
 	private sub class_initialize
 		i_version = "2.4.0"
 		i_defaultPropertyName = JSON_DEFAULT_PROPERTY_NAME
+		i_lowerCaseKeys = false
 		redim i_items(-1)
 		i_items_count = 0
 		i_items_capacity = 0
@@ -1193,7 +1220,7 @@ end class
 ' represents a name/value pair of a JSON object
 class JSONpair
 	dim i_name, i_value
-	dim i_parent
+	dim i_parent, i_lowerCaseKeys
 	
 	' The name or key of the pair
 	public property get name
@@ -1228,11 +1255,23 @@ class JSONpair
 	
 	public property set parent(val)
 		set i_parent = val
+		i_lowerCaseKeys = i_parent.lowerCaseKeys
 	end property
 	
+
+	' Get/sets the automatic lowercasing of all property names when added, effectivelly turning property names case insensitive
+	public property get lowerCaseKeys
+		lowerCaseKeys = i_lowerCaseKeys
+	end property
+
+	public property let lowerCaseKeys(value)
+		i_lowerCaseKeys = value
+	end property
+
 	
 	' Constructor and destructor
 	private sub class_initialize
+		i_lowerCaseKeys = false
 	end sub
 	
 	private sub class_terminate
