@@ -43,7 +43,7 @@ class JSONobject
 	end property
 
 	
-	' Gets/sets the automatic lowercasing of all property names when added, effectivelly turning property names case insensitive
+	' Gets/sets the automatic lowercasing of property names on serialization output
 	public property get lowerCaseKeys
 		lowerCaseKeys = i_lowerCaseKeys
 	end property
@@ -673,7 +673,11 @@ class JSONobject
 			end if
 			
 			if prop.name = JSON_ROOT_KEY then
-				out = out & ("""" & obj.defaultPropertyName & """:")
+				if i_lowerCaseKeys then
+					out = out & ("""" & lcase(obj.defaultPropertyName) & """:")
+				else
+					out = out & ("""" & obj.defaultPropertyName & """:")
+				end if
 			else
 				if i_lowerCaseKeys then
 					out = out & ("""" & lcase(prop.name) & """:")
@@ -1041,7 +1045,7 @@ class JSONarray
 	end property
 
 	
-	' Gets/sets the automatic lowercasing of all property names when added, effectivelly turning property names case insensitive
+	' Gets/sets the automatic lowercasing of property names on serialization output
 	public property get lowerCaseKeys
 		lowerCaseKeys = i_lowerCaseKeys
 	end property
@@ -1159,6 +1163,7 @@ class JSONarray
 		if isEmpty(js) then
 			set js = new JSONobject
 			js.defaultPropertyName = i_defaultPropertyName
+			js.lowerCaseKeys = i_lowerCaseKeys
 			instantiated = true
 		end if
 		
@@ -1259,7 +1264,7 @@ class JSONpair
 	end property
 	
 
-	' Get/sets the automatic lowercasing of all property names when added, effectivelly turning property names case insensitive
+	' Get/sets the automatic lowercasing of property names on serialization output
 	public property get lowerCaseKeys
 		lowerCaseKeys = i_lowerCaseKeys
 	end property

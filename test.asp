@@ -48,7 +48,7 @@ response.buffer = true
 	
 	testChangeDefaultPropertyName = true
 
-	testLowercaseKeys = false
+	testLowercaseKeys = true
 	
 	set jsonObj = new JSONobject
 	set jsonArr = new jsonArray
@@ -239,6 +239,43 @@ response.buffer = true
 	%>
 	<pre><%= left(jsonString, 2000) %><% if len(jsonString) > 2000 then %>... (too long, truncated)<% end if %></pre>	
 	<% response.flush %>
+
+	<h3>Lowercase Key Assertions</h3>
+	<% 
+	if testLowercaseKeys then
+		dim assertObj, assertArr, objStr, arrStr, ok
+		ok = true
+
+		' Independent JSONobject
+		set assertObj = new JSONobject
+		assertObj.add "FULLNAME", "John"
+		assertObj.lowerCaseKeys = true
+		objStr = assertObj.Serialize()
+		if instr(objStr, """fullname""") > 0 then
+			response.write "PASS: Independent JSONobject lowercase: " & objStr & "<br>"
+		else
+			response.write "FAIL: Independent JSONobject lowercase missing. Got: " & objStr & "<br>"
+			ok = false
+		end if
+
+		' Independent JSONarray (standalone, not relying on shared parent parse)
+		set assertArr = new JSONarray
+		dim innerObj
+		set innerObj = new JSONobject
+		innerObj.add "ID", 123
+		assertArr.Push innerObj
+		assertArr.lowerCaseKeys = true
+		arrStr = assertArr.Serialize()
+		if instr(arrStr, """id""") > 0 then
+			response.write "PASS: Independent JSONarray lowercase: " & arrStr & "<br>"
+		else
+			response.write "FAIL: Independent JSONarray lowercase missing. Got: " & arrStr & "<br>"
+			ok = false
+		end if
+
+		if ok then response.write "All lowercase assertions passed.<br>" else response.write "Some assertions failed.<br>"
+	end if
+	%>
 
 	<h3>Array Loop</h3>
 	<pre><%
