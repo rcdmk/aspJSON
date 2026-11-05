@@ -2,20 +2,16 @@
 Option Explicit
 Response.LCID = 1046 ' Brazilian LCID (use your locale code here).
 ' Could also be the LCID property of the page declaration or Session.LCID to set it to the entire session.
-response.buffer = true
+Response.Buffer = true
 %>
 <!--#include file="jsonObject.class.asp" -->
 <!DOCTYPE html>
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>ASPJSON</title>
-	
+	<title>ASPJSON Tests</title>
 	<style type="text/css">
-		body {
-			font-family: Arial, Helvetica, sans-serif;
-		}
-	
+		body { font-family: Arial, Helvetica, sans-serif; }
 		pre {
 			border: solid 1px #CCCCCC;
 			background-color: #EEE;
@@ -25,345 +21,314 @@ response.buffer = true
 			white-space: pre-wrap;
 			word-wrap: break-word;
 		}
+		.pass { color: #0a0; }
+		.fail { color: #c00; font-weight: bold; }
 	</style>
 </head>
 <body>
 	<h1>JSON Object and Array Tests</h1>
 	<%
-	server.ScriptTimeout = 10
-	dim jsonObj, jsonString, jsonArr, outputObj, start
-	dim testLoad, testAdd, testRemove, testValue, testChange, testArrayPush, testLoadRecordset
-	dim testLoadArray, testChangeDefaultPropertyName, testLowercaseKeys
-	
-	testLoad = true
-	testLoadArray = true
-	testAdd = true
-	testRemove = true
-	testValue = true
-	testChange = true
-	
-	testArrayPush = true
-	
-	testLoadRecordset = true
-	
-	testChangeDefaultPropertyName = true
+	Server.ScriptTimeout = 10
 
-	testLowercaseKeys = true
-	
-	set jsonObj = new JSONobject
-	set jsonArr = new jsonArray
-	
-	jsonObj.debug = false ' switch to true to print internal parsing
-	
-	if testLowercaseKeys then
-		jsonObj.lowerCaseKeys = true
-		jsonArr.lowerCaseKeys = true
-	end if
+	dim passCount, failCount
+	passCount = 0
+	failCount = 0
 
-	%><p><b>Lowercase keys<% if testLowercaseKeys then %> enabled<% else %> disabled<% end if %></b></p><%
-
-	if testLoad then
-		jsonString = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""bools"": true, ""arrays"": [1, ""2"", 3.4, [5, -6, [7, 8, [[[""9"", ""10""]]]]]], ""emptyArray"": [], ""emptyObject"": {}, ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] }, ""multiline"": ""Texto com\r\nMais de\r\numa linha e escapado com \\."" }"
-		
-		if testLoadArray then jsonString = "[" & jsonString & "]"
-		%>
-		<h3>Parse Input</h3>
-		<pre><%= jsonString %></pre>
-		<%
-		response.flush
-
-		start = timer()
-		set outputObj = jsonObj.parse(jsonString)
-		if testLoadArray then set jsonArr = outputObj
-
-		response.Write "Load time: " & round(timer() - start, 6) & " s<br>"
-	end if
-	
-	if testAdd then
-		dim arr, multArr, nestedObject
-		arr = Array(1, "teste", 234.56, "mais teste", "234", now)
-		
-		redim multArr(2, 3)
-		multArr(0, 0) = "0,0"
-		multArr(0, 1) = "0,1"
-		multArr(0, 2) = "0,2"
-		multArr(0, 3) = "0,3"
-
-		multArr(1, 0) = "1,0"
-		multArr(1, 1) = "1,1"
-		multArr(1, 2) = "1,2"
-		multArr(1, 3) = "1,3"
-		
-		multArr(2, 0) = "2,0"
-		multArr(2, 1) = "2,1"
-		multArr(2, 2) = "2,2"
-		multArr(2, 3) = "2,3"
-
-		jsonObj.add "nome", "José"
-		jsonObj.add "ficticio", true
-		jsonObj.add "idade", 25
-		jsonObj.add "saldo", -52
-		jsonObj.add "bio", "Nascido em São Paulo\Brasil" & vbcrlf & "Sem filhos" & vbcrlf & vbtab & "Jogador de WoW"
-		jsonObj.add "data-atual", now
-		jsonObj.add "lista", arr
-		jsonObj.add "lista2", multArr
-		
-		set nestedObject = new JSONobject
-		nestedObject.add "sub1", "value of sub1"
-		nestedObject.add "sub2", "value of ""sub2"""
-		
-		jsonObj.add "nested", nestedObject
-	end if
-	
-	if testRemove then
-		jsonObj.remove "numbers"
-		jsonObj.remove "aNonExistantPropertyName" ' this sould run silently, even to non existant properties
-	end if
-	
-	if testChangeDefaultPropertyName then
-		jsonObj.defaultPropertyName = "CustomName"
-		jsonArr.defaultPropertyName = "CustomArrName"
-	end if
-
-	
-
-	if testValue then
-		%><h3>Get Values</h3><%
-		response.write "nome: " & jsonObj.value("nome") & "<br>"
-		response.write "idade: " & jsonObj("idade") & "<br>" ' short syntax
-		response.write "non existant property:" & jsonObj("aNonExistantPropertyName") & "(" & typeName(jsonObj("aNonExistantPropertyName")) & ")<br>"
-		
-		if isObject(jsonObj(jsonObj.defaultPropertyName)) then
-			response.write "default property name (" & jsonObj.defaultPropertyName & "): <pre>" & jsonObj(jsonObj.defaultPropertyName).Serialize() & "</pre>"
+	sub checkResult(cond, testName)
+		if cond then
+			passCount = passCount + 1
+			response.write "<span class=""pass"">PASS</span>: " & testName & "<br>"
 		else
-			response.write "default property name (" & jsonObj.defaultPropertyName & "):" & jsonObj(jsonObj.defaultPropertyName) & "<br>"
+			failCount = failCount + 1
+			response.write "<span class=""fail"">FAIL</span>: " & testName & "<br>"
 		end if
-	end if	
-	
-	if testChange then
-		%><h3>Change Values</h3><%
-		
-		response.write "nome before: " & jsonObj.value("nome") & "<br>"
-		
-		jsonObj.change "nome", "Mario"
-		
-		response.write "nome after: " & jsonObj.value("nome") & "<br>"
-		
-		jsonObj.change "nonExisting", -1
-		
-		response.write "Non existing property is created with: " & jsonObj.value("nonExisting") & "<br>"
-	end if
-	
-	if testArrayPush then
-		dim newJson
-		set newJson = new JSONobject
-		newJson.add "newJson", "property"
-		newJson.add "version", newJson.version
+	end sub
 
-		jsonArr.Push newJson
-		jsonArr.Push 1
-		jsonArr.Push "strings too"
-	end if
-	
-	if testLoadRecordset then
-		%><h3>Load a Recordset</h3>
-		<!--
-		   METADATA
-		   TYPE="TypeLib"
-		   NAME="Microsoft ActiveX Data Objects 2.5 Library"
-		   UUID="{00000205-0000-0010-8000-00AA006D2EA4}"
-		   VERSION="2.5"
-		-->
-		<%
-		dim rs
-		set rs = createObject("ADODB.Recordset")
-		
-		' prepere an in memory recordset 
-		' could be, and most of the time will be, loaded from a database instead
-		rs.CursorType = adOpenKeyset
-		rs.CursorLocation = adUseClient
-		rs.LockType = adLockOptimistic
-		
-		rs.Fields.Append "ID", adInteger, , adFldKeyColumn
-		rs.Fields.Append "NomeCompleto", adVarChar, 50, adFldMayBeNull
-		rs.Fields.Append "Valor", adDecimal, 14, adFldMayBeNull
-		rs.Fields("Valor").NumericScale = 2
-		
-		rs.Open
-		
-		rs.AddNew
-		rs("ID") = 1
-		rs("NomeCompleto") = "Nome 1"
-		rs("Valor") = 10.99
-		rs.Update
-		
-		rs.AddNew
-		rs("ID") = 2
-		rs("NomeCompleto") = "Nome 2"
-		rs("Valor") = 29.90
-		rs.Update
-		
-		rs.moveFirst
-		jsonObj.LoadFirstRecord rs
-		' or
-		rs.moveFirst
-		jsonArr.LoadRecordSet rs
-		
-		rs.Close
-		
-		set rs = nothing
-	end if	
-	
-	if testLoad then
-		start = timer()
-		%>
-		<h3>Parse Output<% if testLoadArray then %>: Array<% end if %></h3>
-		<pre><%= outputObj.write %></pre>
-		<%
-		response.write round(timer() - start, 6)
-		response.write " s<br>"
-		response.flush
-	end if
-	%>
-	
-	<h3>JSON Object Output<% if testLoad then %> (Same as parse output: <% if typeName(jsonObj) = typeName(outputObj) then %>yes<% else %>no<% end if %>)<% end if %></h3>
+	dim jsonLiteral
+	jsonLiteral = "{ ""strings"" : ""valorTexto"", ""numbers"": 123.456, ""bools"": true, ""arrays"": [1, ""2"", 3.4, [5, -6, [7, 8, [[[""9"", ""10""]]]]]], ""emptyArray"": [], ""emptyObject"": {}, ""objects"": { ""prop1"": ""outroTexto"", ""prop2"": [ { ""id"": 1, ""name"": ""item1"" }, { ""id"": 2, ""name"": ""item2"", ""teste"": { ""maisum"": [1, 2, 3] } } ] }, ""multiline"": ""Texto com\r\nMais de\r\numa linha e escapado com \\."" }"
+
+	' ============================================================
+	' Test: parse a JSON object
+	' ============================================================
+	%><h3>Test: parse a JSON object</h3><%
+	dim parseObj, parseStart
+	set parseObj = new JSONobject
+	parseObj.debug = false
+
+	parseStart = timer()
+	parseObj.parse jsonLiteral
+	response.write "Parse time: " & round(timer() - parseStart, 6) & " s<br>"
+
+	Call checkResult(parseObj.value("strings") = "valorTexto", "parse object: string value")
+	Call checkResult(parseObj.value("numbers") = 123.456, "parse object: number value")
+	Call checkResult(parseObj.value("bools") = true, "parse object: boolean value")
+	Call checkResult(InStr(parseObj.Serialize(), """arrays"":[1,""2"",3.4") > 0, "parse object: array value")
+	Call checkResult(InStr(parseObj.Serialize(), """emptyArray"":[]") > 0, "parse object: empty array")
+	Call checkResult(InStr(parseObj.Serialize(), """emptyObject"":{}") > 0, "parse object: empty object")
+	Call checkResult(InStr(parseObj.Serialize(), """prop1"":""outroTexto""") > 0, "parse object: nested object")
+	Call checkResult(InStr(parseObj.Serialize(), "Texto com") > 0, "parse object: multiline value")
+
+	' ============================================================
+	' Test: parse a JSON array
+	' ============================================================
+	%><h3>Test: parse a JSON array</h3><%
+	dim arrayLiteral, arrayParser, parsedArray
+	arrayLiteral = "[" & jsonLiteral & "]"
+
+	set arrayParser = new JSONobject
+	set parsedArray = arrayParser.parse(arrayLiteral)
+
+	Call checkResult(TypeName(parsedArray) = "JSONarray", "parse array: returns a JSONarray")
+	Call checkResult(parsedArray.length = 1, "parse array: has one item")
+	Call checkResult(InStr(parsedArray.Serialize(), "valorTexto") > 0, "parse array: item serialized")
+
+	' ============================================================
+	' Test: add properties
+	' ============================================================
+	%><h3>Test: add properties</h3><%
+	dim addObj, simpleArr, multArr, nested
+	set addObj = new JSONobject
+	addObj.debug = false
+
+	addObj.add "nome", "José"
+	addObj.add "ficticio", true
+	addObj.add "idade", 25
+	addObj.add "saldo", -52
+	addObj.add "bio", "Nascido em São Paulo\Brasil" & vbcrlf & "Sem filhos" & vbcrlf & vbtab & "Jogador de WoW"
+	addObj.add "data-atual", now
+
+	simpleArr = Array(1, "teste", 234.56, "mais teste", "234", now)
+	addObj.add "lista", simpleArr
+
+	redim multArr(2, 3)
+	multArr(0, 0) = "0,0"
+	multArr(0, 1) = "0,1"
+	multArr(0, 2) = "0,2"
+	multArr(0, 3) = "0,3"
+	multArr(1, 0) = "1,0"
+	multArr(1, 1) = "1,1"
+	multArr(1, 2) = "1,2"
+	multArr(1, 3) = "1,3"
+	multArr(2, 0) = "2,0"
+	multArr(2, 1) = "2,1"
+	multArr(2, 2) = "2,2"
+	multArr(2, 3) = "2,3"
+	addObj.add "lista2", multArr
+
+	set nested = new JSONobject
+	nested.add "sub1", "value of sub1"
+	nested.add "sub2", "value of ""sub2"""
+	addObj.add "nested", nested
+
+	Call checkResult(addObj.value("nome") = "José", "add: string property")
+	Call checkResult(addObj.value("ficticio") = true, "add: boolean property")
+	Call checkResult(addObj.value("idade") = 25, "add: integer property")
+	Call checkResult(addObj.value("saldo") = -52, "add: negative integer property")
+	Call checkResult(InStr(addObj.Serialize(), "Nascido em São Paulo") > 0, "add: multiline string property")
+	Call checkResult(InStr(addObj.Serialize(), """lista"":[1,""teste"",234.56") > 0, "add: simple array property")
+	Call checkResult(InStr(addObj.Serialize(), """lista2"":[[""0,0""") > 0, "add: multidimensional array property")
+	Call checkResult(InStr(addObj.Serialize(), """sub1"":""value of sub1""") > 0, "add: nested object property")
+	Call checkResult(InStr(addObj.Serialize(), """sub2"":") > 0, "add: escaped quotes in nested object")
+
+	' ============================================================
+	' Test: remove properties
+	' ============================================================
+	%><h3>Test: remove properties</h3><%
+	dim removeObj
+	set removeObj = new JSONobject
+	removeObj.add "removeMe", "x"
+	removeObj.add "keepMe", "y"
+	removeObj.remove "removeMe"
+	removeObj.remove "doesNotExist"
+
+	Call checkResult(InStr(removeObj.Serialize(), "removeMe") = 0, "remove: existing property removed")
+	Call checkResult(removeObj.value("keepMe") = "y", "remove: other property untouched")
+	Call checkResult(IsNull(removeObj.value("doesNotExist")), "remove: non-existent property is silent")
+
+	' ============================================================
+	' Test: get values
+	' ============================================================
+	%><h3>Test: get values</h3><%
+	dim getObj
+	set getObj = new JSONobject
+	getObj.add "nome", "José"
+	getObj.add "idade", 25
+
+	Call checkResult(getObj.value("nome") = "José", "value: value() method")
+	Call checkResult(getObj("idade") = 25, "value: default property syntax")
+	Call checkResult(IsNull(getObj("aNonExistantPropertyName")), "value: non-existent returns Null")
+
+	' ============================================================
+	' Test: change values
+	' ============================================================
+	%><h3>Test: change values</h3><%
+	dim changeObj
+	set changeObj = new JSONobject
+	changeObj.add "nome", "José"
+	changeObj.change "nome", "Mario"
+	changeObj.change "created", -1
+
+	Call checkResult(changeObj.value("nome") = "Mario", "change: existing property")
+	Call checkResult(changeObj.value("created") = -1, "change: creates missing property")
+
+	' ============================================================
+	' Test: array push
+	' ============================================================
+	%><h3>Test: array push</h3><%
+	dim pushArr, pushedObj, firstItem
+	set pushArr = new JSONarray
+	set pushedObj = new JSONobject
+	pushedObj.add "newJson", "property"
+	pushedObj.add "version", pushedObj.version
+
+	pushArr.Push pushedObj
+	pushArr.Push 1
+	pushArr.Push "strings too"
+
+	set firstItem = pushArr(0)
+
+	Call checkResult(pushArr.length = 3, "push: length after three pushes")
+	Call checkResult(firstItem.value("newJson") = "property", "push: object item")
+	Call checkResult(pushArr(1) = 1, "push: integer item")
+	Call checkResult(pushArr(2) = "strings too", "push: string item")
+
+	' ============================================================
+	' Test: load recordsets
+	' ============================================================
+	%><h3>Test: load recordsets</h3>
+	<!--
+	   METADATA
+	   TYPE="TypeLib"
+	   NAME="Microsoft ActiveX Data Objects 2.5 Library"
+	   UUID="{00000205-0000-0010-8000-00AA006D2EA4}"
+	   VERSION="2.5"
+	-->
 	<%
-	jsonString = jsonObj.Serialize()
-	%>
-	<pre><%= left(jsonString, 2000) %><% if len(jsonString) > 2000 then %>... (too long, truncated)<% end if %></pre>	
-	<% response.flush %>
+	dim rs, firstObj, rsArr
+	set rs = createObject("ADODB.Recordset")
+	rs.CursorType = adOpenKeyset
+	rs.CursorLocation = adUseClient
+	rs.LockType = adLockOptimistic
 
-	<h3>Array Output<% if testLoad then %> (Same as parse output: <% if typeName(jsonArr) = typeName(outputObj) then %>yes<% else %>no<% end if %>)<% end if %></h3>
-	<%
-	jsonString = jsonArr.Serialize()
-	%>
-	<pre><%= left(jsonString, 2000) %><% if len(jsonString) > 2000 then %>... (too long, truncated)<% end if %></pre>	
-	<% response.flush %>
+	rs.Fields.Append "ID", adInteger, , adFldKeyColumn
+	rs.Fields.Append "NomeCompleto", adVarChar, 50, adFldMayBeNull
+	rs.Fields.Append "Valor", adDecimal, 14, adFldMayBeNull
+	rs.Fields("Valor").NumericScale = 2
 
-	<h3>Lowercase Key Assertions</h3>
-	<% 
-	if testLowercaseKeys then
-		dim assertObj, assertArr, objStr, arrStr, ok
-		ok = true
+	rs.Open
 
-		' Independent JSONobject
-		set assertObj = new JSONobject
-		assertObj.add "FULLNAME", "John"
-		assertObj.lowerCaseKeys = true
-		objStr = assertObj.Serialize()
-		If instr(objStr, """fullname""") > 0 Then
-			response.write "PASS: Independent JSONobject lowercase: " & objStr & "<br>"
-		Else
-			response.write "FAIL: Independent JSONobject lowercase missing. Got: " & objStr & "<br>"
-			ok = False
-		End If
+	rs.AddNew
+	rs("ID") = 1
+	rs("NomeCompleto") = "Nome 1"
+	rs("Valor") = 10.99
+	rs.Update
 
-		' Independent JSONarray (standalone, not relying on shared parent parse)
-		set assertArr = new JSONarray
-		dim innerObj
-		set innerObj = new JSONobject
-		innerObj.add "ID", 123
-		assertArr.Push innerObj
-		assertArr.lowerCaseKeys = true
-		arrStr = assertArr.Serialize()
-		If instr(arrStr, """id""") > 0 Then
-			response.write "PASS: Independent JSONarray lowercase: " & arrStr & "<br>"
-		Else
-			response.write "FAIL: Independent JSONarray lowercase missing. Got: " & arrStr & "<br>"
-			ok = False
-		End If
+	rs.AddNew
+	rs("ID") = 2
+	rs("NomeCompleto") = "Nome 2"
+	rs("Valor") = 29.90
+	rs.Update
 
-		If ok then response.write "All lowercase assertions passed.<br>" else response.write "Some assertions failed.<br>"
+	set firstObj = new JSONobject
+	rs.moveFirst
+	firstObj.LoadFirstRecord rs
+
+	Call checkResult(firstObj.value("ID") = 1, "LoadFirstRecord: integer field")
+	Call checkResult(firstObj.value("NomeCompleto") = "Nome 1", "LoadFirstRecord: string field")
+	Call checkResult(Abs(CDbl(firstObj.value("Valor")) - 10.99) < 0.001, "LoadFirstRecord: decimal field")
+
+	set rsArr = new JSONarray
+	rs.moveFirst
+	rsArr.LoadRecordSet rs
+
+	dim rsFirst
+	set rsFirst = rsArr(0)
+
+	Call checkResult(rsArr.length = 2, "JSONarray.LoadRecordSet: row count")
+	Call checkResult(rsFirst.value("NomeCompleto") = "Nome 1", "JSONarray.LoadRecordSet: first row")
+
+	set firstObj = new JSONobject
+	rs.moveFirst
+	firstObj.LoadRecordSet rs
+
+	Call checkResult(InStr(firstObj.Serialize(), """NomeCompleto"":""Nome 1""") > 0, "JSONobject.LoadRecordSet: first row")
+	Call checkResult(InStr(firstObj.Serialize(), """NomeCompleto"":""Nome 2""") > 0, "JSONobject.LoadRecordSet: second row")
+
+	rs.Close
+	set rs = nothing
+
+	' ============================================================
+	' Test: default property name
+	' ============================================================
+	%><h3>Test: default property name</h3><%
+	dim defObj, defArr
+	set defObj = new JSONobject
+	Call checkResult(defObj.defaultPropertyName = "data", "defaultPropertyName: initial value")
+	defObj.defaultPropertyName = "CustomName"
+	Call checkResult(defObj.defaultPropertyName = "CustomName", "defaultPropertyName: setter")
+
+	set defArr = new JSONarray
+	defArr.defaultPropertyName = "CustomArrName"
+	Call checkResult(defArr.defaultPropertyName = "CustomArrName", "JSONarray.defaultPropertyName: setter")
+
+	' ============================================================
+	' Test: lowerCaseKeys
+	' ============================================================
+	%><h3>Test: lowerCaseKeys</h3><%
+	dim lcObj, lcArr, lcInner, lcJson
+	set lcObj = new JSONobject
+	lcObj.add "FULLNAME", "John"
+	lcObj.lowerCaseKeys = true
+	lcJson = lcObj.Serialize()
+
+	Call checkResult(InStr(lcJson, """fullname""") > 0, "lowerCaseKeys: JSONobject key lowercased")
+	Call checkResult(lcObj.value("FULLNAME") = "John", "lowerCaseKeys: original lookup still works")
+
+	set lcArr = new JSONarray
+	set lcInner = new JSONobject
+	lcInner.add "ID", 123
+	lcArr.Push lcInner
+	lcArr.lowerCaseKeys = true
+	lcJson = lcArr.Serialize()
+
+	Call checkResult(InStr(lcJson, """id""") > 0, "lowerCaseKeys: JSONarray item key lowercased")
+
+	set lcObj = new JSONobject
+	lcObj.add JSON_ROOT_KEY, "v"
+	lcObj.defaultPropertyName = "RootKey"
+	lcObj.lowerCaseKeys = true
+	lcJson = lcObj.Serialize()
+
+	Call checkResult(InStr(lcJson, """rootkey""") > 0, "lowerCaseKeys: wrapper key lowercased")
+
+	' ============================================================
+	' Test: JSONscript serialization
+	' ============================================================
+	%><h3>Test: JSONscript serialization</h3><%
+	dim jsCode, jsKey, jsObj, jsScr, expectedJs, actualJs
+	jsCode = "function() { alert('test'); }"
+	jsKey = "script"
+	expectedJs = "{""" & jsKey & """:" & jsCode & "}"
+
+	set jsScr = new JSONscript
+	jsScr.value = jsCode
+	set jsObj = new JSONobject
+	jsObj.Add jsKey, jsScr
+	actualJs = jsObj.Serialize()
+
+	Call checkResult(actualJs = expectedJs, "JSONscript: serialized without quotes")
+
+	' ============================================================
+	' Summary
+	' ============================================================
+	%><h3>Summary</h3><%
+	response.write "Passed: " & passCount & "<br>"
+	response.write "Failed: " & failCount & "<br>"
+	if failCount = 0 then
+		response.write "<b>All " & passCount & " assertions passed.</b><br>"
+	else
+		response.write "<b>" & failCount & " assertion(s) failed.</b><br>"
 	end if
 	%>
-
-	<h3>Array Loop</h3>
-	<pre><%
-	dim i, items, item
-	
-
-	' more readable loop
-	i = 0
-	response.write "For Each Loop (readability):<br>==============<br>"
-	start = timer()
-	for each item in jsonArr.items
-		response.write "Index "
-		response.write i
-		response.write ": "
-	
-		if isObject(item) and typeName(item) = "JSONobject" then
-			item.write()
-		else
-			response.write item
-		end if
-		
-		response.write "<br>"
-		i = i + 1
-		if i mod 100 = 0 then response.flush
-	next
-	response.write timer() - start
-	response.write " s<br>"
-
-	response.write "<br><br>For Loop (speed):<br>=========<br>"
-	start = timer()
-
-	' faster but less readable
-	for i = 0 to jsonArr.length - 1
-		response.write "Index "
-		response.write i
-		response.write ": "
-	
-		if isObject(jsonArr(i)) then
-			set item = jsonArr(i)
-			
-			if typeName(item) = "JSONobject" then
-				item.write()
-			else
-				response.write item
-			end if
-		else
-			item = jsonArr(i)
-			response.write item
-		end if
-		
-		response.write "<br>"
-		if i mod 100 = 0 then response.flush
-	next
-	response.write round(timer() - start, 6)
-	response.write " s<br>"
-
-	set newJson = nothing
-	set outputObj = nothing
-	set jsonObj = nothing
-	set jsonArr = nothing
-	%></pre>
-	
-	<h3>JSON Script Output</h3>
-	
-	<%
-	dim realOutput
-	dim expectedOutput
-	
-	dim javascriptCode
-	dim javascriptkey
-	
-	dim jsonScr
-
-	javascriptCode = "function() { alert('test'); }"
-	javascriptKey = "script"
-	
-	expectedOutput = "{""" & javascriptKey & """:" & javascriptCode & "}"
-	
-	set jsonScr = new JSONscript
-	jsonScr.value = javascriptCode
-	
-	set jsonObj = new JSONobject
-	jsonObj.Add javascriptKey, jsonScr
-	
-	realOutput = jsonObj.Serialize()
-	
-	%><h4>Output<% if (realOutput = expectedOutput) then %> (correct)<% else %> (INCORRECT!)<% end if %></h4>
-	<pre><%= realOutput %></pre>
-	
 </body>
 </html>
