@@ -684,15 +684,38 @@ class JSONobject
 	' Helpers
 	' Serializes a JSON object to JSON formatted string
 	public function serializeObject(obj)
-		dim out, prop, value, i, pairs, valueType
-		out = "{"
+		dim buf, n, i, prop, value, pairs, props, objType
 		
 		pairs = obj.pairs
+		props = ubound(pairs) + 1
 		
-		for i = 0 to ubound(pairs)
+		' One slot for "{", up to three per property and one for "}"
+		redim buf(props * 3 + 3)
+		buf(0) = "{"
+		n = 1
+		
+		for i = 0 to props - 1
 			set prop = pairs(i)
 			
-			if out <> "{" then out = out & ","
+			if i > 0 then
+				buf(n) = ","
+				n = n + 1
+			end if
+			
+			if prop.name = JSON_ROOT_KEY then
+				if i_lowerCaseKeys then
+					buf(n) = """" & lcase(obj.defaultPropertyName) & """:"
+				else
+					buf(n) = """" & obj.defaultPropertyName & """:"
+				end if
+			else
+				if i_lowerCaseKeys then
+					buf(n) = """" & lcase(prop.name) & """:"
+				else
+					buf(n) = """" & prop.name & """:"
+				end if
+			end if
+			n = n + 1
 			
 			if isobject(prop.value) then
 				set value = prop.value
@@ -700,45 +723,38 @@ class JSONobject
 				value = prop.value
 			end if
 			
-			if prop.name = JSON_ROOT_KEY then
-				if i_lowerCaseKeys then
-					out = out & ("""" & lcase(obj.defaultPropertyName) & """:")
-				else
-					out = out & ("""" & obj.defaultPropertyName & """:")
-				end if
-			else
-				if i_lowerCaseKeys then
-					out = out & ("""" & lcase(prop.name) & """:")
-				else
-					out = out & ("""" & prop.name & """:")
-				end if
-			end if
-			
-			if isArray(value) or GetTypeName(value) = "JSONarray" then
-				out = out & serializeArray(value)
-				
-			elseif isObject(value) and GetTypeName(value) = "JSONscript" then
-				out = out & value.Serialize()
-
+			if isArray(value) then
+				buf(n) = serializeArray(value)
 			elseif isObject(value) then
-				out = out & serializeObject(value)
+				objType = jsonTypeOf(value)
 				
+				if objType = "JSONarray" then
+					buf(n) = serializeArray(value)
+				elseif objType = "JSONscript" then
+					buf(n) = value.Serialize()
+				else
+					buf(n) = serializeObject(value)
+				end if
 			else
-				out = out & serializeValue(value)
+				buf(n) = serializeValue(value)
 			end if
+			n = n + 1
 		next
 		
-		out = out & "}"
+		buf(n) = "}"
+		redim preserve buf(n)
 		
-		serializeObject = out
+		serializeObject = join(buf, "")
 	end function
 	
 	' Serializes a value to a valid JSON formatted string representing the value
 	' (quoted for strings, the type name for objects, null for nothing and null values)
 	public function serializeValue(byval value)
-		dim out
+		dim out, valueType
+		
+		valueType = lcase(GetTypeName(value))
 
-		select case lcase(GetTypeName(value))
+		select case valueType
 			case "null"
 				out = "null"
 			
@@ -782,13 +798,15 @@ class JSONobject
 	
 	' Serializes an array item to JSON formatted string
 	private function serializeArrayItem(byref elm)
-		dim out, val
+		dim out, val, elmType
 
 		if isobject(elm) then
-			if GetTypeName(elm) = "JSONobject" then
+			elmType = jsonTypeOf(elm)
+			
+			if elmType = "JSONobject" then
 				set val = elm
 			
-			elseif GetTypeName(elm) = "JSONarray" then
+			elseif elmType = "JSONarray" then
 				val = elm.items
 				
 			elseif isObject(elm.value) then
@@ -801,14 +819,16 @@ class JSONobject
 			val = elm
 		end if
 
-		if isArray(val) or GetTypeName(val) = "JSONarray" then
-			out = out & serializeArray(val)
-			
+		if isArray(val) then
+			out = serializeArray(val)
 		elseif isObject(val) then
-			out = out & serializeObject(val)
-			
+			if jsonTypeOf(val) = "JSONarray" then
+				out = serializeArray(val)
+			else
+				out = serializeObject(val)
+			end if
 		else
-			out = out & serializeValue(val)
+			out = serializeValue(val)
 		end if
 
 		serializeArrayItem = out
@@ -816,58 +836,103 @@ class JSONobject
 
 	' Serializes an array or JSONarray object to JSON formatted string
 	public function serializeArray(byref arr)
-		dim i, j, k, dimensions, out, innerArray, elm, val
+		dim buf, n, j, k, dimensions, innerArray, elm, count, rows, cols
 
-		out = "["
-		
 		if isobject(arr) then
-			log("Serializing jsonArray object")
+			if i_debug then log("Serializing jsonArray object")
 			innerArray = arr.items
 		else
-			log("Serializing VB array")
+			if i_debug then log("Serializing VB array")
 			innerArray = arr
 		end if
-
+		
 		dimensions = NumDimensions(innerArray)
 		
 		if dimensions > 1 then
-			log("Multidimensional array")
-			for j = 0 to ubound(innerArray, 1)
-				out = out & "["
+			if i_debug then log("Multidimensional array")
+			
+			rows = ubound(innerArray, 1) + 1
+			cols = ubound(innerArray, 2) + 1
+			redim buf(rows * (cols * 2 + 2) + 3)
+			
+			buf(0) = "["
+			n = 1
+			
+			for j = 0 to rows - 1
+				buf(n) = "["
+				n = n + 1
 
-				for k = 0 to ubound(innerArray, 2)
-					if k > 0 then out = out & ","
+				for k = 0 to cols - 1
+					if k > 0 then
+						buf(n) = ","
+						n = n + 1
+					end if
 					
 					if isObject(innerArray(j, k)) then
-						set elm = innerArray(j, k)							
+						set elm = innerArray(j, k)
 					else
 						elm = innerArray(j, k)
 					end if
 
-					out = out & serializeArrayItem(elm)
+					buf(n) = serializeArrayItem(elm)
+					n = n + 1
 				next
 
-				out = out & "]"
-			next	
-		else
-			for j = 0 to ubound(innerArray)
-				if j > 0 then out = out & ","
-				
-				if isobject(innerArray(j)) then
-					set elm = innerArray(j)
-				else
-					elm = innerArray(j)
-				end if
-								
-				out = out & serializeArrayItem(elm)
+				buf(n) = "]"
+				n = n + 1
 			next
+			
+			buf(n) = "]"
+			redim preserve buf(n)
+			
+			serializeArray = join(buf, "")
+			exit function
 		end if
-
-		out = out & "]"
 		
-		serializeArray = out
+		count = ubound(innerArray) + 1
+		
+		' One slot for "[", up to two per item and one for "]"
+		redim buf(count * 2 + 3)
+		buf(0) = "["
+		n = 1
+		
+		for j = 0 to count - 1
+			if j > 0 then
+				buf(n) = ","
+				n = n + 1
+			end if
+			
+			if isobject(innerArray(j)) then
+				set elm = innerArray(j)
+			else
+				elm = innerArray(j)
+			end if
+							
+			buf(n) = serializeArrayItem(elm)
+			n = n + 1
+		next
+
+		buf(n) = "]"
+		redim preserve buf(n)
+		
+		serializeArray = join(buf, "")
 	end function
 	
+	' Returns the jSON type of a library object ("" for foreign objects)
+	private function jsonTypeOf(byref obj)
+		dim result
+		
+		result = ""
+		on error resume next
+		result = obj.jsonType
+		if err.number <> 0 then
+			err.clear
+			result = ""
+		end if
+		on error goto 0
+		
+		jsonTypeOf = result
+	end function
 	
 	' Returns the number of dimensions an array has
 	public Function NumDimensions(byref arr)
@@ -987,12 +1052,17 @@ class JSONobject
 		if not isNull(text) then
 			result = cstr(result)
 			
-			result = replace(result, "\", "\\")
-			result = replace(result, """", "\""")
-			result = replace(result, vbcr, "\r")
-			result = replace(result, vblf, "\n")
-			result = replace(result, vbtab, "\t")
-			result = replace(result, vbback, "\b")
+			' Fast path: only pay for the six Replace calls when one of the
+			' characters they target is actually present. Serializing strings
+			' without escapes is the common case and this skips all six scans.
+			if InStr(result, "\") > 0 or InStr(result, """") > 0 or InStr(result, vbcr) > 0 or InStr(result, vblf) > 0 or InStr(result, vbtab) > 0 or InStr(result, vbback) > 0 then
+				result = replace(result, "\", "\\")
+				result = replace(result, """", "\""")
+				result = replace(result, vbcr, "\r")
+				result = replace(result, vblf, "\n")
+				result = replace(result, vbtab, "\t")
+				result = replace(result, vbback, "\b")
+			end if
 		end if
 	
 		EscapeCharacters = result
@@ -1220,6 +1290,11 @@ end class
 class JSONscript
 	dim i_version
 	dim s_value, s_nullString
+
+	' Fast type identification used by the serializer
+	public property get jsonType
+		jsonType = "JSONscript"
+	end property
 
 	' The value
 	public property get value
