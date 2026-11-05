@@ -134,9 +134,9 @@ class JSONobject
 		actualLCID = Response.LCID
 		Response.LCID = 1033
 		
-		strJson = trim(strJson)
-		
 		size = len(strJson)
+		
+		if i_debug then log("Load string (" & size & " chars)")
 		
 		' At least 2 chars to continue
 		if size < 2 then err.raise JSON_ERROR_PARSE, TypeName(me), "Invalid JSON string to parse"
@@ -378,7 +378,15 @@ class JSONobject
 							value = cdbl(value)
 						else
 							if i_debug then log("Value converted to " & value)
-							value = eval(lcase(value))
+							If LCase(value) = "true" Then
+								value = True
+							ElseIf LCase(value) = "false" Then
+								value = False
+							ElseIf LCase(value) = "null" Then
+								value = Null
+							Else
+								value = value
+							End If
 						end if
 					end if
 					
