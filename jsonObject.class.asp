@@ -85,6 +85,13 @@ class JSONobject
 	public property get version
 		version = i_version
 	end property
+	
+	
+	' Fast type identification used by the parse and serialize hot paths
+	' (TypeName on a class instance is very slow in VBScript)
+	public property get jsonType
+		jsonType = "JSONobject"
+	end property
 
 
 	' Constructor and destructor
@@ -115,29 +122,30 @@ class JSONobject
 	
 	' Parse a JSON string and populate the object
 	public function parse(byval strJson)
-		dim regex, i, size, char, prevchar, quoted
+		dim regex, i, size, char, quoted
 		dim mode, item, key, keyStart, value, openArray, openObject
 		dim actualLCID, tmpArray, tmpObj, addedToArray
 		dim root, currentObject, currentArray
+		dim closePos, hasEscape, currentArrayIsArray, parentType
 		
-		log("Load string: """ & strJson & """")
+		if i_debug then log("Load string: """ & strJson & """")
 		
 		' Store the actual LCID and use the en-US to conform with the JSON standard
 		actualLCID = Response.LCID
 		Response.LCID = 1033
 		
-		strJson = trim(strJson)
-		
 		size = len(strJson)
+		
+		if i_debug then log("Load string (" & size & " chars)")
 		
 		' At least 2 chars to continue
 		if size < 2 then err.raise JSON_ERROR_PARSE, TypeName(me), "Invalid JSON string to parse"
 		
-		' Init the regex to be used in the loop
+		' Init the regex used to decode unicode escapes
 		set regex = new regexp
 		regex.global = true
 		regex.ignoreCase = true
-		regex.pattern = "\w"
+		regex.pattern = JSON_UNICODE_CHARS_REGEX
 		
 		' setup initial values
 		i = 0
@@ -150,14 +158,19 @@ class JSONobject
 		' main state machine
 		do while i < size
 			i = i + 1
-			char = mid(strJson, i, 1)
+			char = Mid(strJson, i, 1)
 			
 			' root, object or array start
 			if mode = "init" then
-				log("Enter init")
+				if i_debug then log("Enter init")
+				
+				currentArrayIsArray = False
+				if isObject(currentArray) then
+					if not (currentArray is nothing) then currentArrayIsArray = (currentArray.jsonType = "JSONarray")
+				end if
 				
 				' if we are in root, clear previous object properties
-				if key = JSON_ROOT_KEY and TypeName(currentArray) <> "JSONarray" then
+				if key = JSON_ROOT_KEY and not currentArrayIsArray then
 					redim i_properties(-1)
 					i_properties_capacity = 0
 					i_properties_count = 0
@@ -165,9 +178,9 @@ class JSONobject
 				
 				' Init object
 				if char = "{" then
-					log("Create object<ul>")
+					if i_debug then log("Create object<ul>")
 					
-					if key <> JSON_ROOT_KEY or TypeName(root) = "JSONarray" then
+					if key <> JSON_ROOT_KEY or root.jsonType = "JSONarray" then
 						' creates a new object
 						set item = new JSONobject
 						set item.parent = currentObject
@@ -175,7 +188,7 @@ class JSONobject
 						addedToArray = false
 						
 						' Object is inside an array
-						if TypeName(currentArray) = "JSONarray" then
+						if currentArrayIsArray then
 							if currentArray.depth > currentObject.depth then
 								' Add it to the array
 								set item.parent = currentArray
@@ -183,13 +196,13 @@ class JSONobject
 								
 								addedToArray = true
 
-								log("Added to the array")
+								if i_debug then log("Added to the array")
 							end if
 						end if
 						
 						if not addedToArray then
-							currentObject.add key, item
-							log("Added to parent object: """ & key & """")
+							currentObject.addParsed key, item
+							if i_debug then log("Added to parent object: """ & key & """")
 						end if
 												
 						set currentObject = item
@@ -200,7 +213,7 @@ class JSONobject
 					
 				' Init Array
 				elseif char = "[" then
-					log("Create array<ul>")
+					if i_debug then log("Create array<ul>")
 					
 					set item = new JSONarray
 					
@@ -215,19 +228,19 @@ class JSONobject
 							
 							addedToArray = true
 							
-							log("Added to parent array")
+							if i_debug then log("Added to parent array")
 						end if
 					end if
 					
 					if not addedToArray then
 						set item.parent = currentObject
-						currentObject.add key, item
-						log("Added to parent object")
+						currentObject.addParsed key, item
+						if i_debug then log("Added to parent object")
 					end if
 
 					if key = JSON_ROOT_KEY and item.depth = 1 then
 						set root = item
-						log("Set as root")
+						if i_debug then log("Set as root")
 					end if
 					
 					set currentArray = item
@@ -239,137 +252,118 @@ class JSONobject
 			elseif mode = "openKey" then
 				key = ""
 				if char = """" then
-					log("Open key")
+					if i_debug then log("Open key")
 					keyStart = i + 1
-					mode = "closeKey"
+					
+					' Jump straight to the closing quote instead of walking char by char
+					closePos = InStr(keyStart, strJson, """")
+					do while closePos > 0
+						if Mid(strJson, closePos - 1, 1) <> "\" then exit do
+						closePos = InStr(closePos + 1, strJson, """")
+					loop
+					
+					if closePos = 0 then err.raise JSON_ERROR_PARSE, TypeName(me), "Unterminated object key"
+					
+					key = Mid(strJson, keyStart, closePos - keyStart)
+					if i_debug then log("Close key: """ & key & """")
+					
+					i = closePos
+					mode = "preValue"
 				elseif char = "}" then ' empty objects
-					log("Empty object")
+					if i_debug then log("Empty object")
 					mode = "next"
 					i = i - 1 ' we backup one char to make the next iteration get the closing bracket
-				end if
-			
-			' Fill in the key until finding a double quote "
-			elseif mode = "closeKey" then
-				' If it finds a non scaped quotation, change to value mode
-				if char = """" and prevchar <> "\" then
-					key = mid(strJson, keyStart, i - keyStart)
-					log("Close key: """ & key & """")
-					mode = "preValue"
 				end if
 			
 			' Wait until a colon char (:) to begin the value
 			elseif mode = "preValue" then
 				if char = ":" then
 					mode = "openValue"
-					log("Open value for """ & key & """")
+					if i_debug then log("Open value for """ & key & """")
 				end if
 			
 			' Begining of value
 			elseif mode = "openValue" then
 				value = ""
 				
+				' Ignore whitespace between the colon/bracket and the value
+				if char = " " or char = vbTab or char = vbCr or char = vbLf then
+					' keep waiting for a value
+				
 				' If the next char is a closing square barcket (]), its closing an empty array
-				if char = "]" then
-					log("Closing empty array")
+				elseif char = "]" then
+					if i_debug then log("Closing empty array")
 					quoted = false
 					mode = "next"
 					i = i - 1 ' we backup one char to make the next iteration get the closing bracket
 				
 				' If it begins with a double quote, its a string value
 				elseif char = """" then
-					log("Open string value")
+					if i_debug then log("Open string value")
 					quoted = true
 					keyStart = i + 1
-					mode = "closeValue"
-				
-				' If it begins with open square bracket ([), its an array
-				elseif char = "[" then
-					log("Open array value")
-					quoted = false
-					mode = "init"
-					i = i - 1 ' we backup one char to init with '['
-				
-				' If it begins with open a bracket ({), its an object
-				elseif char = "{" then
-					log("Open object value")
-					quoted = false
-					mode = "init"
-					i = i - 1 ' we backup one char to init with '{'
 					
-				else
-					' If its a number, start a numeric value
-					if regex.pattern <> "\d" then regex.pattern = "\d"
-					if regex.test(char) then
-						log("Open numeric value")
-						quoted = false
-						value = char
-						mode = "closeValue"
-						if prevchar = "-" then
-							value = prevchar & char
-						end if
-						
-					' special values: null, true, false and undefined
-					elseif char = "n" or char = "t" or char = "f" or char = "u" then
-						log("Open special value")
-						quoted = false
-						value = char
-						mode = "closeValue"
-					end if
-				end if
-			
-			' Fill in the value until finish
-			elseif mode = "closeValue" then
-				if quoted then
-					if char = """" and prevchar <> "\" then
-						value = mid(strJson, keyStart, i - keyStart)
-
+					' Jump straight to the closing quote instead of walking char by char
+					closePos = InStr(keyStart, strJson, """")
+					do while closePos > 0
+						if Mid(strJson, closePos - 1, 1) <> "\" then exit do
+						closePos = InStr(closePos + 1, strJson, """")
+					loop
+					
+					if closePos = 0 then err.raise JSON_ERROR_PARSE, TypeName(me), "Unterminated string value"
+					
+					value = Mid(strJson, keyStart, closePos - keyStart)
+					i = closePos
+					
+					' Only pay for unescaping when the string actually contains a backslash
+					if InStr(value, "\") > 0 then
 						value = replace(value, "\n", vblf)
 						value = replace(value, "\r", vbcr)
 						value = replace(value, "\t", vbtab)
 						value = replace(value, "\b", vbback)
 						value = replace(value, "\\", "\")
-
-						regex.pattern = JSON_UNICODE_CHARS_REGEX
+						
 						if regex.test(value) then
 							dim match
 							for each match in regex.Execute(value)
 								value = replace(value, match.value, ChrW("&H" & match.SubMatches(0)))
 							next
 						end if
-
-						log("Close string value: """ & value & """")
-						mode = "addValue"
 					end if
+					
+					if i_debug then log("Close string value: """ & value & """")
+					mode = "addValue"
+				
+				' If it begins with open square bracket ([), its an array
+				elseif char = "[" then
+					if i_debug then log("Open array value")
+					quoted = false
+					mode = "init"
+					i = i - 1 ' we backup one char to init with '['
+				
+				' If it begins with open a bracket ({), its an object
+				elseif char = "{" then
+					if i_debug then log("Open object value")
+					quoted = false
+					mode = "init"
+					i = i - 1 ' we backup one char to init with '{'
+					
 				else
-					' possible boolean and null values
-					if regex.pattern <> JSON_SPECIAL_VALUES_REGEX then regex.pattern = JSON_SPECIAL_VALUES_REGEX
-					if regex.test(char) or regex.test(value) then
-						value = value & char
-						if value = "true" or value = "false" or value = "null" or value = "undefined" then mode = "addValue"
-					else
-						char = lcase(char)
-						
-						' If is a numeric char
-						if regex.pattern <> "\d" then regex.pattern = "\d"
-						if regex.test(char) then
-							value = value & char
-						
-						' If it's not a numeric char, but the prev char was a number
-						' used to catch separators and special numeric chars
-						elseif regex.test(prevchar) or prevchar = "e" then
-							if char = "." or char = "e" or (prevchar = "e" and (char = "-" or char = "+")) then
-								value = value & char
-							else
-								log("Close numeric value: " & value)
-								mode = "addValue"
-								i = i - 1
-							end if
-						else
-							log("Close numeric value: " & value)
-							mode = "addValue"
-							i = i - 1
-						end if
-					end if
+					' Numbers and special values (true, false, null, undefined).
+					' Read the whole token in one pass and stop at the first delimiter.
+					if i_debug then log("Open numeric or special value")
+					quoted = false
+					keyStart = i
+					
+					do while i <= size
+						char = Mid(strJson, i, 1)
+						if char = "," or char = "}" or char = "]" or char = ":" or char = " " or char = vbTab or char = vbCr or char = vbLf then exit do
+						i = i + 1
+					loop
+					
+					value = Mid(strJson, keyStart, i - keyStart)
+					i = i - 1
+					mode = "addValue"
 				end if
 			
 			' Add the value to the object or array
@@ -380,11 +374,19 @@ class JSONobject
 					
 					if not quoted then
 						if isNumeric(value) then
-							log("Value converted to number")
+							if i_debug then log("Value converted to number")
 							value = cdbl(value)
 						else
-							log("Value converted to " & value)
-							value = eval(value)
+							if i_debug then log("Value converted to " & value)
+							If LCase(value) = "true" Then
+								value = True
+							ElseIf LCase(value) = "false" Then
+								value = False
+							ElseIf LCase(value) = "null" Then
+								value = Null
+							Else
+								value = value
+							End If
 						end if
 					end if
 					
@@ -404,13 +406,13 @@ class JSONobject
 						if useArray then
 							currentArray.Push value
 							
-							log("Value added to array: """ & key & """: " & value)
+							if i_debug then log("Value added to array: """ & key & """: " & value)
 						end if
 					end if
 					
 					if not useArray then
 						currentObject.add key, value
-						log("Value added: """ & key & """")
+						if i_debug then log("Value added: """ & key & """")
 					end if
 				end if
 				
@@ -425,39 +427,44 @@ class JSONobject
 						' and the current object is a parent or sibling object
 						if currentArray.depth >= currentObject.depth then
 							' start an array value
-							log("New value")
+							if i_debug then log("New value")
 							mode = "openValue"
 						else
 							' start an object key
-							log("New key")
+							if i_debug then log("New key")
 							mode = "openKey"
 						end if
 					else
 						' start an object key
-						log("New key")
+						if i_debug then log("New key")
 						mode = "openKey"
 					end if
 				
 				elseif char = "]" then
-					log("Close array</ul>")
+					if i_debug then log("Close array</ul>")
 					
 					' If it's and open array, we close it and set the current array as its parent
 					if isobject(currentArray.parent) then
-						if TypeName(currentArray.parent) = "JSONarray" then
+						parentType = ""
+						if not (currentArray.parent is nothing) then parentType = currentArray.parent.jsonType
+						
+						if parentType = "JSONarray" then
 							set currentArray = currentArray.parent
 						
 						' if the parent is an object
-						elseif TypeName(currentArray.parent) = "JSONobject" then
+						elseif parentType = "JSONobject" then
 							set tmpObj = currentArray.parent
 							
 							' we search for the next parent array to set the current array
-							while isObject(tmpObj) and TypeName(tmpObj) = "JSONobject"
+							do while isObject(tmpObj)
+								if tmpObj is nothing then exit do
+								if tmpObj.jsonType <> "JSONobject" then exit do
 								if isObject(tmpObj.parent) then
 									set tmpObj = tmpObj.parent
 								else
 									tmpObj = tmpObj.parent
 								end if
-							wend
+							loop
 							
 							set currentArray = tmpObj
 						end if
@@ -470,21 +477,26 @@ class JSONobject
 					mode = "next"
 
 				elseif char = "}" then
-					log("Close object</ul>")
+					if i_debug then log("Close object</ul>")
 					
 					' If it's an open object, we close it and set the current object as it's parent
 					if isobject(currentObject.parent) then
-						if TypeName(currentObject.parent) = "JSONobject" then
+						parentType = ""
+						if not (currentObject.parent is nothing) then parentType = currentObject.parent.jsonType
+						
+						if parentType = "JSONobject" then
 							set currentObject = currentObject.parent
 						
 						' If the parent is and array
-						elseif TypeName(currentObject.parent) = "JSONarray" then
+						elseif parentType = "JSONarray" then
 							set tmpObj = currentObject.parent
 							
 							' we search for the next parent object to set the current object
-							while isObject(tmpObj) and TypeName(tmpObj) = "JSONarray"
+							do while isObject(tmpObj)
+								if tmpObj is nothing then exit do
+								if tmpObj.jsonType <> "JSONarray" then exit do
 								set tmpObj = tmpObj.parent
-							wend
+							loop
 							
 							set currentObject = tmpObj
 						end if
@@ -497,8 +509,6 @@ class JSONobject
 					mode = "next"
 				end if
 			end if
-			
-			prevchar = char
 		loop
 		
 		set regex = nothing
@@ -510,19 +520,16 @@ class JSONobject
 	
 	' Add a new property (key-value pair)
 	public sub add(byval prop, byval obj)
-		dim p
-		getProperty prop, p
+		dim p, propIndex
+		propIndex = getProperty(prop, p)
 		
-		if GetTypeName(p) = "JSONpair" then
+		if propIndex > -1 then
 			err.raise JSON_ERROR_PROPERTY_ALREADY_EXISTS, TypeName(me), "A property already exists with the name: " & prop & "."
 		else
 			dim item
 			set item = new JSONpair
 			item.name = prop
 			set item.parent = me
-
-			dim itemType
-			itemType = GetTypeName(obj)
 
 			if isArray(obj) then
 				dim item2
@@ -532,10 +539,17 @@ class JSONobject
 
 				set item.value = item2
 				
-			elseif itemType = "Field" then
-				item.value = obj.value
-			elseif isObject(obj) and itemType <> "IStringList" then
-				set item.value = obj
+			elseif isObject(obj) then
+				dim itemType
+				itemType = TypeName(obj)
+				
+				if itemType = "Field" then
+					item.value = obj.value
+				elseif itemType = "IStringList" then
+					item.value = obj
+				else
+					set item.value = obj
+				end if
 			else
 				item.value = obj
 			end if
@@ -550,6 +564,28 @@ class JSONobject
 		end if
 	end sub
 	
+	' Internal fast path used by parse for values already known to be JSON objects/arrays.
+	' Skips the generic type detection done by add().
+	public sub addParsed(byval prop, byval obj)
+		dim p, propIndex, item
+		propIndex = getProperty(prop, p)
+		
+		if propIndex > -1 then err.raise JSON_ERROR_PROPERTY_ALREADY_EXISTS, TypeName(me), "A property already exists with the name: " & prop & "."
+		
+		set item = new JSONpair
+		item.name = prop
+		set item.parent = me
+		set item.value = obj
+		
+		if i_properties_count >= i_properties_capacity then
+			redim preserve i_properties(i_properties_capacity * 1.2 + 1)
+			i_properties_capacity = ubound(i_properties) + 1
+		end if
+
+		set i_properties(i_properties_count) = item
+		i_properties_count = i_properties_count + 1
+	end sub
+	
 	' Remove a property from the object (key-value pair)
 	public sub remove(byval prop)
 		dim p, i
@@ -561,10 +597,10 @@ class JSONobject
 	
 	' Return the value of a property by its key
 	public default function value(byval prop)
-		dim p
-		getProperty prop, p
+		dim p, propIndex
+		propIndex = getProperty(prop, p)
 		
-		if GetTypeName(p) = "JSONpair" then
+		if propIndex > -1 then
 			if isObject(p.value) then
 				set value = p.value
 			else
@@ -578,10 +614,10 @@ class JSONobject
 	' Change the value of a property
 	' Creates the property if it didn't exists
 	public sub change(byval prop, byval obj)
-		dim p
-		getProperty prop, p
+		dim p, propIndex
+		propIndex = getProperty(prop, p)
 		
-		if GetTypeName(p) = "JSONpair" then
+		if propIndex > -1 then
 			if isArray(obj) then
 				set item = new JSONarray
 				item.items = obj
@@ -988,7 +1024,13 @@ class JSONarray
 	public property get version
 		version = i_version
 	end property
-
+	
+	' Fast type identification used by the parse and serialize hot paths
+	' (TypeName on a class instance is very slow in VBScript)
+	public property get jsonType
+		jsonType = "JSONarray"
+	end property
+	
 	' The actual array items
 	public property get items
 		dim tmp

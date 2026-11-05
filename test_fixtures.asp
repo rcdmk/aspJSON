@@ -125,8 +125,9 @@ Server.ScriptTimeout = 300
 	Call runFixture("small-file.json", "dataset", 200, 200, true)
 	Call runFixture("medium-file.json", "data", 10000, 10000, true)
 
-	' The large fixture is not parsed: the parser runs at roughly 0.14 MB/s,
-	' so a 222 MB document would take around 25 minutes. Verify existence and size only.
+	' The large fixture is not parsed: after the parser optimization it runs at
+	' roughly 2.8 MB/s, so the 221 MB document takes about 80 seconds (~1.3 minutes)
+	' and grows the worker process by ~1.8 GB. Verify existence and size only.
 	Call runFixture("large-file.json", "records", 150000, 150000, false)
 	%>
 	<h3>Summary</h3>
