@@ -859,6 +859,11 @@ class JSONobject
 			n = 1
 			
 			for j = 0 to rows - 1
+				if j > 0 then
+					buf(n) = ","
+					n = n + 1
+				end if
+				
 				buf(n) = "["
 				n = n + 1
 
