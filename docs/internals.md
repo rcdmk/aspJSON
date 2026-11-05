@@ -171,7 +171,7 @@ Serialization is compact by design; there is no indentation option.
 - `JSONobject.LoadRecordSet` and `JSONarray.LoadRecordSet` with an in-memory ADO recordset.
 - `JSONscript` raw output.
 
-Every scenario is self-contained and runs unconditionally. The page prints a `PASS`/`FAIL` line for each assertion and a final summary, so a clean run ends with `All N assertions passed.` It uses `Response.Buffer = True` and `Server.ScriptTimeout = 10`; the repository's [`web.config`](../web.config) raises the ASP buffering and timeout limits for larger tests. Note that IIS Express locks the `system.webServer/asp/limits` section by default, so it may need to be unlocked (or the file removed) when serving the test page locally.
+Every scenario is self-contained and runs unconditionally. The page prints a `PASS`/`FAIL` line for each assertion and a final summary, so a clean run ends with `All N assertions passed.` It uses `Response.Buffer = True` and `Server.ScriptTimeout = 10`; the repository's [`web.config`](../web.config) raises the ASP buffering and timeout limits for larger tests. Note that IIS Express locks the `system.webServer/asp/limits` section by default: the x64 `AppServer\applicationhost.config` declares `<section name="asp" overrideModeDefault="Deny" />`. Change it to `Allow` (or temporarily remove `web.config`) when serving the test page locally.
 
 ## See also
 
