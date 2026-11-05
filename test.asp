@@ -51,7 +51,7 @@ Response.Buffer = true
 	' Test: parse a JSON object
 	' ============================================================
 	%><h3>Test: parse a JSON object</h3><%
-	dim parseObj, parseStart
+	dim parseObj, parseStart, serObj
 	set parseObj = new JSONobject
 	parseObj.debug = false
 
@@ -59,34 +59,38 @@ Response.Buffer = true
 	parseObj.parse jsonLiteral
 	response.write "Parse time: " & round(timer() - parseStart, 6) & " s<br>"
 
+	serObj = parseObj.Serialize()
+
 	Call checkResult(parseObj.value("strings") = "valorTexto", "parse object: string value")
 	Call checkResult(parseObj.value("numbers") = 123.456, "parse object: number value")
 	Call checkResult(parseObj.value("bools") = true, "parse object: boolean value")
-	Call checkResult(InStr(parseObj.Serialize(), """arrays"":[1,""2"",3.4") > 0, "parse object: array value")
-	Call checkResult(InStr(parseObj.Serialize(), """emptyArray"":[]") > 0, "parse object: empty array")
-	Call checkResult(InStr(parseObj.Serialize(), """emptyObject"":{}") > 0, "parse object: empty object")
-	Call checkResult(InStr(parseObj.Serialize(), """prop1"":""outroTexto""") > 0, "parse object: nested object")
-	Call checkResult(InStr(parseObj.Serialize(), "Texto com") > 0, "parse object: multiline value")
+	Call checkResult(InStr(serObj, """arrays"":[1,""2"",3.4") > 0, "parse object: array value")
+	Call checkResult(InStr(serObj, """emptyArray"":[]") > 0, "parse object: empty array")
+	Call checkResult(InStr(serObj, """emptyObject"":{}") > 0, "parse object: empty object")
+	Call checkResult(InStr(serObj, """prop1"":""outroTexto""") > 0, "parse object: nested object")
+	Call checkResult(InStr(serObj, "Texto com") > 0, "parse object: multiline value")
 
 	' ============================================================
 	' Test: parse a JSON array
 	' ============================================================
 	%><h3>Test: parse a JSON array</h3><%
-	dim arrayLiteral, arrayParser, parsedArray
+	dim arrayLiteral, arrayParser, parsedArray, serArr
 	arrayLiteral = "[" & jsonLiteral & "]"
 
 	set arrayParser = new JSONobject
 	set parsedArray = arrayParser.parse(arrayLiteral)
 
+	serArr = parsedArray.Serialize()
+
 	Call checkResult(TypeName(parsedArray) = "JSONarray", "parse array: returns a JSONarray")
 	Call checkResult(parsedArray.length = 1, "parse array: has one item")
-	Call checkResult(InStr(parsedArray.Serialize(), "valorTexto") > 0, "parse array: item serialized")
+	Call checkResult(InStr(serArr, "valorTexto") > 0, "parse array: item serialized")
 
 	' ============================================================
 	' Test: add properties
 	' ============================================================
 	%><h3>Test: add properties</h3><%
-	dim addObj, simpleArr, multArr, nested
+	dim addObj, simpleArr, multArr, nested, serAdd
 	set addObj = new JSONobject
 	addObj.debug = false
 
@@ -120,28 +124,32 @@ Response.Buffer = true
 	nested.add "sub2", "value of ""sub2"""
 	addObj.add "nested", nested
 
+	serAdd = addObj.Serialize()
+
 	Call checkResult(addObj.value("nome") = "José", "add: string property")
 	Call checkResult(addObj.value("ficticio") = true, "add: boolean property")
 	Call checkResult(addObj.value("idade") = 25, "add: integer property")
 	Call checkResult(addObj.value("saldo") = -52, "add: negative integer property")
-	Call checkResult(InStr(addObj.Serialize(), "Nascido em São Paulo") > 0, "add: multiline string property")
-	Call checkResult(InStr(addObj.Serialize(), """lista"":[1,""teste"",234.56") > 0, "add: simple array property")
-	Call checkResult(InStr(addObj.Serialize(), """lista2"":[[""0,0""") > 0, "add: multidimensional array property")
-	Call checkResult(InStr(addObj.Serialize(), """sub1"":""value of sub1""") > 0, "add: nested object property")
-	Call checkResult(InStr(addObj.Serialize(), """sub2"":") > 0, "add: escaped quotes in nested object")
+	Call checkResult(InStr(serAdd, "Nascido em São Paulo") > 0, "add: multiline string property")
+	Call checkResult(InStr(serAdd, """lista"":[1,""teste"",234.56") > 0, "add: simple array property")
+	Call checkResult(InStr(serAdd, """lista2"":[[""0,0""") > 0, "add: multidimensional array property")
+	Call checkResult(InStr(serAdd, """sub1"":""value of sub1""") > 0, "add: nested object property")
+	Call checkResult(InStr(serAdd, """sub2"":") > 0, "add: escaped quotes in nested object")
 
 	' ============================================================
 	' Test: remove properties
 	' ============================================================
 	%><h3>Test: remove properties</h3><%
-	dim removeObj
+	dim removeObj, serRemove
 	set removeObj = new JSONobject
 	removeObj.add "removeMe", "x"
 	removeObj.add "keepMe", "y"
 	removeObj.remove "removeMe"
 	removeObj.remove "doesNotExist"
 
-	Call checkResult(InStr(removeObj.Serialize(), "removeMe") = 0, "remove: existing property removed")
+	serRemove = removeObj.Serialize()
+
+	Call checkResult(InStr(serRemove, "removeMe") = 0, "remove: existing property removed")
 	Call checkResult(removeObj.value("keepMe") = "y", "remove: other property untouched")
 	Call checkResult(IsNull(removeObj.value("doesNotExist")), "remove: non-existent property is silent")
 
@@ -204,7 +212,7 @@ Response.Buffer = true
 	   VERSION="2.5"
 	-->
 	<%
-	dim rs, firstObj, rsArr
+	dim rs, firstObj, rsArr, serRs
 	set rs = createObject("ADODB.Recordset")
 	rs.CursorType = adOpenKeyset
 	rs.CursorLocation = adUseClient
@@ -251,8 +259,10 @@ Response.Buffer = true
 	rs.moveFirst
 	firstObj.LoadRecordSet rs
 
-	Call checkResult(InStr(firstObj.Serialize(), """NomeCompleto"":""Nome 1""") > 0, "JSONobject.LoadRecordSet: first row")
-	Call checkResult(InStr(firstObj.Serialize(), """NomeCompleto"":""Nome 2""") > 0, "JSONobject.LoadRecordSet: second row")
+	serRs = firstObj.Serialize()
+
+	Call checkResult(InStr(serRs, """NomeCompleto"":""Nome 1""") > 0, "JSONobject.LoadRecordSet: first row")
+	Call checkResult(InStr(serRs, """NomeCompleto"":""Nome 2""") > 0, "JSONobject.LoadRecordSet: second row")
 
 	rs.Close
 	set rs = nothing
@@ -349,10 +359,11 @@ Response.Buffer = true
 	Call checkResult(issue94Arr(0).value("id") = 1, "Issue #94: Root array item access")
 
 	' Issue #68: Array not closed correctly in parse (nested arrays)
-	dim issue68Parser, issue68Obj
+	dim issue68Parser, issue68Obj, issue68Json
 	set issue68Parser = new JSONobject
 	set issue68Obj = issue68Parser.parse("{""a"":[[1,2],[3,4]]}")
-	Call checkResult(InStr(issue68Obj.Serialize(), """a"":[[1,2],[3,4]]") > 0, "Issue #68: Nested arrays parse correctly")
+	issue68Json = issue68Obj.Serialize()
+	Call checkResult(InStr(issue68Json, """a"":[[1,2],[3,4]]") > 0, "Issue #68: Nested arrays parse correctly")
 
 	' Issue #66: Date serialization produces valid JSON
 	dim issue66Obj, issue66Json
