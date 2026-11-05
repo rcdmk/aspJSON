@@ -28,14 +28,12 @@ const JSON_UNICODE_CHARS_REGEX = "\u(\d{4})"
 
 | Mode         | Purpose                                                                                |
 | ------------ | -------------------------------------------------------------------------------------- |
-| `init`       | Starts a root, object, or array; creates the corresponding class and links its parent. |
-| `openKey`    | Waits for the opening quote of an object key.                                          |
-| `closeKey`   | Collects characters until an unescaped closing quote.                                  |
-| `preValue`   | Waits for the `:` separator.                                                           |
-| `openValue`  | Determines whether the value is a string, number, array, object, or keyword.           |
-| `closeValue` | Collects the value and decodes string escapes.                                         |
-| `addValue`   | Converts the collected text and stores it in the current object or array.              |
-| `next`       | Handles `,`, `]`, and `}` and chooses the next state.                                  |
+| `init`      | Starts a root, object, or array; creates the corresponding class and links its parent. |
+| `openKey`   | Finds the object key by jumping to its closing quote.                                 |
+| `preValue`  | Waits for the `:` separator.                                                          |
+| `openValue` | Detects the value type and reads strings, numbers, arrays, objects, or keywords.      |
+| `addValue`  | Converts the collected text and stores it in the current object or array.             |
+| `next`      | Handles `,`, `]`, and `}` and chooses the next state.                                 |
 
 Two references, `currentObject` and `currentArray`, plus the `openObject` / `openArray` counters, track where values belong. Depth values on the objects are used to decide whether a value belongs to the current object or to an enclosing array.
 
@@ -50,10 +48,19 @@ The parser starts with `key = JSON_ROOT_KEY` and `root = me`.
 
 ### String and value handling
 
-- String values are collected by slicing the input between quotes, then decoded with `Replace` calls for `\n`, `\r`, `\t`, `\b`, and `\\`, followed by a regular expression pass for `\uXXXX`.
-- Property names are collected the same way structurally, but **no escape decoding is applied**.
+- Strings are read with `InStr` from the opening quote to the next unescaped quote, so the character loop never visits the string body. Escape decoding (`Replace` for `\n`, `\r`, `\t`, `\b`, and `\\`, then a regular expression pass for `\uXXXX`) runs only when the value contains a backslash.
+- Property names are read the same way, but **no escape decoding is applied**.
 - Numeric tokens are converted with `CDbl` (inside an en-US LCID block), so all numbers become `Double`.
 - Keywords are converted through `Eval` after being restricted to short keyword-like tokens. The intended tokens are `true`, `false`, `null`, and `undefined`. `Eval` is not applied to arbitrary JSON text, but malformed input can still raise a native VBScript error here.
+
+### Performance notes
+
+Two details matter far more than the state machine itself:
+
+- **`TypeName` is expensive for class instances.** The parser compares `jsonType` (`"JSONobject"` / `"JSONarray"`, a cheap property read) instead of calling `TypeName` for each container transition.
+- **Value-less transitions are cheap.** Numbers and keywords are read as a single token, and containers created by the parser are stored with `addParsed`, which skips the generic type detection in `Add`.
+
+A 15 MB document parses in roughly 4 seconds on IIS Express (about 3.5 MB/s), compared with roughly 100 seconds before these changes.
 
 ### LCID handling
 
