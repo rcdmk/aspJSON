@@ -805,6 +805,7 @@ class JSONobject
 		if dimensions > 1 then
 			log("Multidimensional array")
 			for j = 0 to ubound(innerArray, 1)
+				if j > 0 then out = out & ","
 				out = out & "["
 
 				for k = 0 to ubound(innerArray, 2)

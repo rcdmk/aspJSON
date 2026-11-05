@@ -319,6 +319,60 @@ Response.Buffer = true
 	Call checkResult(actualJs = expectedJs, "JSONscript: serialized without quotes")
 
 	' ============================================================
+	' Test: Issue regressions
+	' ============================================================
+	%><h3>Test: Issue regressions</h3><%
+
+	' Issue #103: 2D VBScript arrays serialize without commas between rows
+	dim arr2d(1, 1), issue103Obj, issue103Json
+	arr2d(0, 0) = 1
+	arr2d(0, 1) = 2
+	arr2d(1, 0) = 3
+	arr2d(1, 1) = 4
+	set issue103Obj = new JSONobject
+	issue103Obj.add "matrix", arr2d
+	issue103Json = issue103Obj.Serialize()
+	Call checkResult(InStr(issue103Json, "[[1,2],[3,4]]") > 0, "Issue #103: 2D array serialization has inter-row commas")
+
+	' Issue #104: Parse() function call syntax - verify correct usage works
+	dim issue104Obj, issue104Result
+	set issue104Obj = new JSONobject
+	set issue104Result = issue104Obj.parse("{""a"":1}")
+	Call checkResult(issue104Result.value("a") = 1, "Issue #104: Parse() with parentheses works")
+
+	' Issue #94: Can't access array after parse (root-level array)
+	dim issue94Parser, issue94Arr
+	set issue94Parser = new JSONobject
+	set issue94Arr = issue94Parser.parse("[{""id"":1},{""id"":2}]")
+	Call checkResult(TypeName(issue94Arr) = "JSONarray", "Issue #94: Root array parses as JSONarray")
+	Call checkResult(issue94Arr.length = 2, "Issue #94: Root array has correct length")
+	Call checkResult(issue94Arr(0).value("id") = 1, "Issue #94: Root array item access")
+
+	' Issue #68: Array not closed correctly in parse (nested arrays)
+	dim issue68Parser, issue68Obj
+	set issue68Parser = new JSONobject
+	set issue68Obj = issue68Parser.parse("{""a"":[[1,2],[3,4]]}")
+	Call checkResult(InStr(issue68Obj.Serialize(), """a"":[[1,2],[3,4]]") > 0, "Issue #68: Nested arrays parse correctly")
+
+	' Issue #66: Date serialization produces valid JSON
+	dim issue66Obj, issue66Json
+	set issue66Obj = new JSONobject
+	issue66Obj.add "dt", #1/2/2020 3:04:05 AM#
+	issue66Json = issue66Obj.Serialize()
+	Call checkResult(InStr(issue66Json, "2020-01-02T03:04:05") > 0, "Issue #66: Date serializes to ISO format")
+	Call checkResult(Right(issue66Json, 2) = """" & "}", "Issue #66: Date JSON is well-formed (ends with quoted string)")
+
+	' Issue #45: LCID handling with arrays
+	dim issue45Obj, issue45Json, oldLCID
+	oldLCID = Response.LCID
+	Response.LCID = 1033 ' en-US
+	set issue45Obj = new JSONobject
+	issue45Obj.add "num", 1234.56
+	issue45Json = issue45Obj.Serialize()
+	Response.LCID = oldLCID
+	Call checkResult(InStr(issue45Json, "1234.56") > 0, "Issue #45: Numbers use dot decimal separator with en-US LCID")
+
+	' ============================================================
 	' Summary
 	' ============================================================
 	%><h3>Summary</h3><%
